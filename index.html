@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Geoportal - Fenómenos de Remoción en Masa</title>
+    <title>Geoportal - Sistema de Reportes</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
             margin: 0;
@@ -16,767 +15,483 @@
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
             color: #333;
-            overflow-x: hidden;
         }
 
-        .navbar {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-            padding: 1rem 0;
-            position: fixed;
-            top: 0;
-            width: 100%;
-            z-index: 1000;
-        }
-
-        .navbar-content {
-            max-width: 1200px;
+        .container {
+            max-width: 1400px;
             margin: 0 auto;
-            padding: 0 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            padding: 20px;
         }
 
-        .logo {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #667eea;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .nav-buttons {
-            display: flex;
-            gap: 1rem;
-        }
-
-        .btn {
-            padding: 0.6rem 1.2rem;
-            border: none;
-            border-radius: 25px;
-            cursor: pointer;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .btn-primary {
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            color: white;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-        }
-
-        .btn-secondary {
-            background: rgba(255, 255, 255, 0.8);
-            color: #667eea;
-            border: 2px solid #667eea;
-        }
-
-        .btn-secondary:hover {
-            background: #667eea;
-            color: white;
-            transform: translateY(-2px);
-        }
-
-        .main-container {
-            margin-top: 80px;
-            padding: 2rem;
-            max-width: 1200px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        .hero {
-            text-align: center;
-            margin-bottom: 3rem;
-            padding: 2rem;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .hero h1 {
-            font-size: 2.5rem;
-            color: white;
-            margin-bottom: 1rem;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-        }
-
-        .hero p {
-            font-size: 1.2rem;
-            color: rgba(255, 255, 255, 0.9);
-            margin-bottom: 2rem;
-        }
-
-        .dashboard {
-            display: grid;
-            grid-template-columns: 1fr 2fr;
-            gap: 2rem;
-            margin-bottom: 2rem;
-        }
-
-        .sidebar {
+        .header {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
             border-radius: 15px;
-            padding: 1.5rem;
+            padding: 20px;
+            margin-bottom: 20px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
             border: 1px solid rgba(255, 255, 255, 0.2);
-            height: fit-content;
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .header p {
+            text-align: center;
+            color: #7f8c8d;
+            font-size: 1.1em;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            height: 600px;
         }
 
         .map-container {
             background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
             border-radius: 15px;
-            padding: 1rem;
+            padding: 20px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
+        .map-container h2 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
         #map {
-            width: 100%;
             height: 500px;
             border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border: 2px solid #e0e0e0;
         }
 
-        .section {
-            margin-bottom: 2rem;
+        .form-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            overflow-y: auto;
         }
 
-        .section h3 {
-            color: #667eea;
-            margin-bottom: 1rem;
-            font-size: 1.2rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
+        .form-container h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.3em;
         }
 
-        .file-upload {
-            background: linear-gradient(45deg, #f093fb 0%, #f5576c 100%);
-            color: white;
-            padding: 1rem;
-            border-radius: 10px;
-            margin-bottom: 1rem;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border: 2px dashed rgba(255, 255, 255, 0.3);
+        .form-group {
+            margin-bottom: 20px;
         }
 
-        .file-upload:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(240, 147, 251, 0.4);
-        }
-
-        .file-upload input {
-            display: none;
-        }
-
-        .data-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 1rem;
-            background: white;
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-        }
-
-        .data-table th, .data-table td {
-            padding: 1rem;
-            text-align: left;
-            border-bottom: 1px solid #e0e0e0;
-        }
-
-        .data-table th {
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            color: white;
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
             font-weight: 600;
+            color: #34495e;
         }
 
-        .data-table tr:hover {
-            background-color: #f8f9ff;
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.8);
         }
 
-        .checkbox-container {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+            background: rgba(255, 255, 255, 1);
         }
 
-        .custom-checkbox {
-            width: 20px;
-            height: 20px;
-            border: 2px solid #667eea;
-            border-radius: 4px;
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .coordinates-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: -9999px;
+        }
+
+        .file-input-label {
             display: flex;
             align-items: center;
             justify-content: center;
+            padding: 12px;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border-radius: 8px;
             cursor: pointer;
             transition: all 0.3s ease;
+            font-weight: 600;
         }
 
-        .custom-checkbox.checked {
-            background: #667eea;
+        .file-input-label:hover {
+            background: linear-gradient(135deg, #2980b9, #1f5582);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .file-info {
+            margin-top: 10px;
+            padding: 8px;
+            background: rgba(46, 204, 113, 0.1);
+            border-radius: 5px;
+            color: #27ae60;
+            font-size: 12px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
             color: white;
-        }
-
-        .filter-section {
-            margin-bottom: 1.5rem;
-        }
-
-        .filter-group {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-            margin-top: 0.5rem;
-        }
-
-        .filter-tag {
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            color: white;
-            padding: 0.3rem 0.8rem;
-            border-radius: 15px;
-            font-size: 0.9rem;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
             cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .filter-tag:hover {
-            transform: scale(1.05);
-        }
-
-        .filter-tag.active {
-            background: linear-gradient(45deg, #f093fb, #f5576c);
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 1rem;
-            margin-bottom: 2rem;
-        }
-
-        .stat-card {
-            background: rgba(255, 255, 255, 0.9);
-            padding: 1.5rem;
-            border-radius: 15px;
-            text-align: center;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-        }
-
-        .stat-number {
-            font-size: 2rem;
-            font-weight: bold;
-            color: #667eea;
-            margin-bottom: 0.5rem;
-        }
-
-        .stat-label {
-            color: #666;
-            font-size: 0.9rem;
-        }
-
-        .legend {
-            background: rgba(255, 255, 255, 0.9);
-            padding: 1rem;
-            border-radius: 10px;
-            margin-top: 1rem;
-        }
-
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .legend-color {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 2000;
-            left: 0;
-            top: 0;
+            font-size: 16px;
+            font-weight: 600;
             width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(5px);
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
-        .modal-content {
-            background: white;
-            margin: 5% auto;
-            padding: 2rem;
-            border-radius: 15px;
-            width: 80%;
-            max-width: 600px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        .btn:hover {
+            background: linear-gradient(135deg, #c0392b, #a93226);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
         }
 
-        .close {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .status-message {
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-weight: 600;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .status-message.success {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            color: white;
+        }
+
+        .status-message.error {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+        }
+
+        .status-message.show {
+            opacity: 1;
+        }
+
+        .map-controls {
+            margin-bottom: 15px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .map-btn {
+            background: linear-gradient(135deg, #9b59b6, #8e44ad);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
             cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
         }
 
-        .close:hover {
-            color: #667eea;
+        .map-btn:hover {
+            background: linear-gradient(135deg, #8e44ad, #7d3c98);
+            transform: translateY(-1px);
         }
 
         @media (max-width: 768px) {
-            .dashboard {
+            .main-content {
                 grid-template-columns: 1fr;
+                height: auto;
             }
             
-            .navbar-content {
-                flex-direction: column;
-                gap: 1rem;
+            .header h1 {
+                font-size: 2em;
             }
             
-            .hero h1 {
-                font-size: 2rem;
-            }
-            
-            .main-container {
-                padding: 1rem;
+            .coordinates-group {
+                grid-template-columns: 1fr;
             }
         }
     </style>
 </head>
 <body>
-    <nav class="navbar">
-        <div class="navbar-content">
-            <div class="logo">
-                <i class="fas fa-mountain"></i>
-                GeoPortal REM
-            </div>
-            <div class="nav-buttons">
-                <button class="btn btn-secondary" onclick="openModal()">
-                    <i class="fas fa-info-circle"></i> Información
-                </button>
-                <button class="btn btn-primary" onclick="exportData()">
-                    <i class="fas fa-download"></i> Exportar
-                </button>
-            </div>
-        </div>
-    </nav>
-
-    <div class="main-container">
-        <div class="hero">
-            <h1><i class="fas fa-globe-americas"></i> Geoportal de Fenómenos de Remoción en Masa</h1>
-            <p>Sistema integrado para la visualización, análisis y gestión de datos relacionados con deslizamientos, flujos de detritos y otros fenómenos gravitacionales</p>
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-number" id="totalEvents">0</div>
-                    <div class="stat-label">Eventos Registrados</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="activeReports">0</div>
-                    <div class="stat-label">Reportes Activos</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="highRiskAreas">0</div>
-                    <div class="stat-label">Áreas de Alto Riesgo</div>
-                </div>
-            </div>
+    <div class="container">
+        <div class="header">
+            <h1>🌍 Geoportal de Reportes</h1>
+            <p>Sistema de gestión y carga de reportes geoespaciales</p>
         </div>
 
-        <div class="dashboard">
-            <div class="sidebar">
-                <div class="section">
-                    <h3><i class="fas fa-upload"></i> Cargar Reportes</h3>
-                    <div class="file-upload" onclick="document.getElementById('fileInput').click()">
-                        <i class="fas fa-cloud-upload-alt" style="font-size: 2rem; margin-bottom: 0.5rem;"></i>
-                        <div>Arrastra archivos aquí o haz clic para seleccionar</div>
-                        <small>Formatos: CSV, JSON, KML, SHP</small>
-                        <input type="file" id="fileInput" accept=".csv,.json,.kml,.shp" multiple>
-                    </div>
-                    <div id="uploadedFiles"></div>
-                </div>
-
-                <div class="section">
-                    <h3><i class="fas fa-filter"></i> Filtros</h3>
-                    <div class="filter-section">
-                        <label><strong>Tipo de Fenómeno:</strong></label>
-                        <div class="filter-group">
-                            <div class="filter-tag active" data-filter="all">Todos</div>
-                            <div class="filter-tag" data-filter="deslizamiento">Deslizamientos</div>
-                            <div class="filter-tag" data-filter="flujo">Flujos</div>
-                            <div class="filter-tag" data-filter="caida">Caídas</div>
-                            <div class="filter-tag" data-filter="volcamiento">Volcamientos</div>
-                        </div>
-                    </div>
-                    
-                    <div class="filter-section">
-                        <label><strong>Nivel de Riesgo:</strong></label>
-                        <div class="filter-group">
-                            <div class="filter-tag active" data-filter="risk-all">Todos</div>
-                            <div class="filter-tag" data-filter="risk-bajo">Bajo</div>
-                            <div class="filter-tag" data-filter="risk-medio">Medio</div>
-                            <div class="filter-tag" data-filter="risk-alto">Alto</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="section">
-                    <h3><i class="fas fa-table"></i> Capas de Datos</h3>
-                    <div class="data-table-container">
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th>Mostrar</th>
-                                    <th>Capa</th>
-                                    <th>Eventos</th>
-                                </tr>
-                            </thead>
-                            <tbody id="layerTable">
-                                <!-- Se llenará dinámicamente -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="legend">
-                    <h4><i class="fas fa-map-marked-alt"></i> Leyenda</h4>
-                    <div class="legend-item">
-                        <div class="legend-color" style="background: #ff4444;"></div>
-                        <span>Alto Riesgo</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-color" style="background: #ffaa00;"></div>
-                        <span>Riesgo Medio</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-color" style="background: #00aa00;"></div>
-                        <span>Riesgo Bajo</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-color" style="background: #4444ff;"></div>
-                        <span>Zona Monitoreada</span>
-                    </div>
-                </div>
-            </div>
-
+        <div class="main-content">
             <div class="map-container">
-                <h3><i class="fas fa-map"></i> Mapa Interactivo</h3>
+                <h2>📍 Mapa Interactivo</h2>
+                <div class="map-controls">
+                    <button class="map-btn" onclick="getCurrentLocation()">📍 Mi Ubicación</button>
+                    <button class="map-btn" onclick="clearMap()">🗑️ Limpiar</button>
+                </div>
                 <div id="map"></div>
             </div>
+
+            <div class="form-container">
+                <h2>📝 Cargar Nuevo Reporte</h2>
+                <form id="reportForm">
+                    <div class="form-group">
+                        <label for="titulo">Título del Reporte *</label>
+                        <input type="text" id="titulo" name="titulo" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="tipo">Tipo de Reporte *</label>
+                        <select id="tipo" name="tipo" required>
+                            <option value="">Seleccionar tipo</option>
+                            <option value="incidente">🚨 Incidente</option>
+                            <option value="observacion">👁️ Observación</option>
+                            <option value="mantenimiento">🔧 Mantenimiento</option>
+                            <option value="ambiental">🌱 Ambiental</option>
+                            <option value="seguridad">🛡️ Seguridad</option>
+                            <option value="otro">📋 Otro</option>
+                        </select>
+                    </div>
+
+                    <div class="coordinates-group">
+                        <div class="form-group">
+                            <label for="latitud">Latitud *</label>
+                            <input type="number" id="latitud" name="latitud" step="any" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="longitud">Longitud *</label>
+                            <input type="number" id="longitud" name="longitud" step="any" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="descripcion">Descripción *</label>
+                        <textarea id="descripcion" name="descripcion" rows="4" required placeholder="Describe detalladamente el reporte..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="prioridad">Prioridad</label>
+                        <select id="prioridad" name="prioridad">
+                            <option value="baja">🟢 Baja</option>
+                            <option value="media" selected>🟡 Media</option>
+                            <option value="alta">🔴 Alta</option>
+                            <option value="critica">🆘 Crítica</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="reportado_por">Reportado por</label>
+                        <input type="text" id="reportado_por" name="reportado_por" placeholder="Nombre del reportante">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Archivos adjuntos (imágenes, documentos)</label>
+                        <div class="file-input-wrapper">
+                            <input type="file" id="archivos" name="archivos" multiple accept=".jpg,.jpeg,.png,.pdf,.doc,.docx">
+                            <label for="archivos" class="file-input-label">
+                                📎 Seleccionar Archivos
+                            </label>
+                        </div>
+                        <div id="file-info" class="file-info" style="display: none;"></div>
+                    </div>
+
+                    <button type="submit" class="btn">🚀 Enviar Reporte</button>
+
+                    <div id="status-message" class="status-message"></div>
+                </form>
+            </div>
         </div>
     </div>
 
-    <!-- Modal -->
-    <div id="infoModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal()">&times;</span>
-            <h2><i class="fas fa-info-circle"></i> Información del Sistema</h2>
-            <p><strong>Geoportal de Fenómenos de Remoción en Masa</strong></p>
-            <p>Este sistema permite la visualización y análisis de datos relacionados con movimientos de masa gravitacionales, incluyendo:</p>
-            <ul>
-                <li>Deslizamientos rotacionales y traslacionales</li>
-                <li>Flujos de detritos y lodo</li>
-                <li>Caídas de rocas y detritos</li>
-                <li>Volcamientos y toppling</li>
-                <li>Reptación y movimientos lentos</li>
-            </ul>
-            <p><strong>Funcionalidades:</strong></p>
-            <ul>
-                <li>Visualización interactiva en mapa</li>
-                <li>Carga de datos en múltiples formatos</li>
-                <li>Filtrado por tipo y nivel de riesgo</li>
-                <li>Análisis temporal y espacial</li>
-                <li>Exportación de reportes</li>
-            </ul>
-        </div>
-    </div>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
     <script>
-        // Inicializar mapa
-        const map = L.map('map').setView([-4.0, -79.2], 8); // Coordenadas de Ecuador
+        let map;
+        let currentMarker;
+        let reportes = [];
 
-        // Agregar capa base
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors'
-        }).addTo(map);
-
-        // Datos de ejemplo
-        const sampleData = [
-            { id: 1, name: 'Deslizamiento Cuenca', type: 'deslizamiento', risk: 'alto', lat: -2.9, lng: -79.0, date: '2024-01-15', affected: 25 },
-            { id: 2, name: 'Flujo Loja', type: 'flujo', risk: 'medio', lat: -4.0, lng: -79.2, date: '2024-02-10', affected: 12 },
-            { id: 3, name: 'Caída Rocas Azogues', type: 'caida', risk: 'bajo', lat: -2.7, lng: -78.8, date: '2024-03-05', affected: 5 },
-            { id: 4, name: 'Deslizamiento Zamora', type: 'deslizamiento', risk: 'alto', lat: -4.1, lng: -78.9, date: '2024-03-20', affected: 30 },
-            { id: 5, name: 'Volcamiento Yantzaza', type: 'volcamiento', risk: 'medio', lat: -3.8, lng: -78.7, date: '2024-04-01', affected: 8 }
-        ];
-
-        // Capas de datos
-        const dataLayers = [
-            { name: 'Deslizamientos', type: 'deslizamiento', visible: true, count: 0 },
-            { name: 'Flujos de Detritos', type: 'flujo', visible: true, count: 0 },
-            { name: 'Caídas de Rocas', type: 'caida', visible: true, count: 0 },
-            { name: 'Volcamientos', type: 'volcamiento', visible: true, count: 0 }
-        ];
-
-        let markers = [];
-        let currentFilter = 'all';
-        let currentRiskFilter = 'risk-all';
-
-        // Colores por nivel de riesgo
-        const riskColors = {
-            'alto': '#ff4444',
-            'medio': '#ffaa00',
-            'bajo': '#00aa00'
-        };
-
-        // Inicializar aplicación
-        function initializeApp() {
-            loadSampleData();
-            setupEventListeners();
-            updateStats();
-            updateLayerTable();
-        }
-
-        // Cargar datos de ejemplo
-        function loadSampleData() {
-            sampleData.forEach(item => {
-                addMarkerToMap(item);
-            });
-        }
-
-        // Agregar marcador al mapa
-        function addMarkerToMap(data) {
-            const color = riskColors[data.risk] || '#4444ff';
+        // Inicializar el mapa
+        function initMap() {
+            map = L.map('map').setView([-4.0, -79.2], 13); // Coordenadas de Zamora, Ecuador
             
-            const marker = L.circleMarker([data.lat, data.lng], {
-                color: color,
-                fillColor: color,
-                fillOpacity: 0.6,
-                radius: 8,
-                weight: 2
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
             }).addTo(map);
 
-            const popupContent = `
-                <div style="font-family: Arial, sans-serif;">
-                    <h4 style="margin: 0 0 10px 0; color: #667eea;">${data.name}</h4>
-                    <p style="margin: 5px 0;"><strong>Tipo:</strong> ${data.type}</p>
-                    <p style="margin: 5px 0;"><strong>Riesgo:</strong> <span style="color: ${color}; font-weight: bold;">${data.risk.toUpperCase()}</span></p>
-                    <p style="margin: 5px 0;"><strong>Fecha:</strong> ${data.date}</p>
-                    <p style="margin: 5px 0;"><strong>Afectados:</strong> ${data.affected} personas</p>
-                </div>
-            `;
-
-            marker.bindPopup(popupContent);
-            marker.data = data;
-            markers.push(marker);
+            // Eventos del mapa
+            map.on('click', function(e) {
+                addMarker(e.latlng.lat, e.latlng.lng);
+            });
         }
 
-        // Configurar event listeners
-        function setupEventListeners() {
-            // Filtros de tipo
-            document.querySelectorAll('.filter-tag').forEach(tag => {
-                tag.addEventListener('click', function() {
-                    const filterType = this.getAttribute('data-filter');
+        // Añadir marcador al mapa
+        function addMarker(lat, lng) {
+            if (currentMarker) {
+                map.removeLayer(currentMarker);
+            }
+            
+            currentMarker = L.marker([lat, lng]).addTo(map);
+            
+            // Actualizar campos de coordenadas
+            document.getElementById('latitud').value = lat.toFixed(6);
+            document.getElementById('longitud').value = lng.toFixed(6);
+        }
+
+        // Obtener ubicación actual
+        function getCurrentLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
                     
-                    if (filterType.startsWith('risk-')) {
-                        document.querySelectorAll('.filter-tag[data-filter^="risk-"]').forEach(t => t.classList.remove('active'));
-                        this.classList.add('active');
-                        currentRiskFilter = filterType;
-                    } else {
-                        document.querySelectorAll('.filter-tag:not([data-filter^="risk-"])').forEach(t => t.classList.remove('active'));
-                        this.classList.add('active');
-                        currentFilter = filterType;
-                    }
+                    map.setView([lat, lng], 15);
+                    addMarker(lat, lng);
                     
-                    applyFilters();
+                    showMessage('Ubicación actual obtenida correctamente', 'success');
+                }, function(error) {
+                    showMessage('Error al obtener la ubicación: ' + error.message, 'error');
                 });
-            });
-
-            // Carga de archivos
-            document.getElementById('fileInput').addEventListener('change', handleFileUpload);
-
-            // Drag and drop
-            const fileUpload = document.querySelector('.file-upload');
-            fileUpload.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                fileUpload.style.background = 'linear-gradient(45deg, #667eea, #764ba2)';
-            });
-
-            fileUpload.addEventListener('dragleave', () => {
-                fileUpload.style.background = 'linear-gradient(45deg, #f093fb 0%, #f5576c 100%)';
-            });
-
-            fileUpload.addEventListener('drop', (e) => {
-                e.preventDefault();
-                fileUpload.style.background = 'linear-gradient(45deg, #f093fb 0%, #f5576c 100%)';
-                const files = e.dataTransfer.files;
-                handleFileUpload({ target: { files } });
-            });
-        }
-
-        // Aplicar filtros
-        function applyFilters() {
-            markers.forEach(marker => {
-                const data = marker.data;
-                let showMarker = true;
-
-                // Filtro por tipo
-                if (currentFilter !== 'all' && data.type !== currentFilter) {
-                    showMarker = false;
-                }
-
-                // Filtro por riesgo
-                if (currentRiskFilter !== 'risk-all' && data.risk !== currentRiskFilter.replace('risk-', '')) {
-                    showMarker = false;
-                }
-
-                if (showMarker) {
-                    marker.addTo(map);
-                } else {
-                    map.removeLayer(marker);
-                }
-            });
-
-            updateStats();
-        }
-
-        // Actualizar estadísticas
-        function updateStats() {
-            const visibleMarkers = markers.filter(marker => map.hasLayer(marker));
-            document.getElementById('totalEvents').textContent = visibleMarkers.length;
-            document.getElementById('activeReports').textContent = visibleMarkers.filter(m => m.data.risk === 'alto').length;
-            document.getElementById('highRiskAreas').textContent = visibleMarkers.filter(m => m.data.risk === 'alto').length;
-        }
-
-        // Actualizar tabla de capas
-        function updateLayerTable() {
-            const tbody = document.getElementById('layerTable');
-            tbody.innerHTML = '';
-
-            dataLayers.forEach((layer, index) => {
-                const count = sampleData.filter(item => item.type === layer.type).length;
-                layer.count = count;
-
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>
-                        <div class="checkbox-container">
-                            <div class="custom-checkbox ${layer.visible ? 'checked' : ''}" onclick="toggleLayer(${index})">
-                                ${layer.visible ? '<i class="fas fa-check"></i>' : ''}
-                            </div>
-                        </div>
-                    </td>
-                    <td>${layer.name}</td>
-                    <td>${count}</td>
-                `;
-                tbody.appendChild(row);
-            });
-        }
-
-        // Toggle visibilidad de capa
-        function toggleLayer(index) {
-            dataLayers[index].visible = !dataLayers[index].visible;
-            updateLayerTable();
-            
-            // Actualizar visibilidad de marcadores
-            markers.forEach(marker => {
-                const layerForMarker = dataLayers.find(layer => layer.type === marker.data.type);
-                if (layerForMarker && !layerForMarker.visible) {
-                    map.removeLayer(marker);
-                } else if (layerForMarker && layerForMarker.visible) {
-                    // Solo agregar si pasa los filtros actuales
-                    let showMarker = true;
-                    if (currentFilter !== 'all' && marker.data.type !== currentFilter) {
-                        showMarker = false;
-                    }
-                    if (currentRiskFilter !== 'risk-all' && marker.data.risk !== currentRiskFilter.replace('risk-', '')) {
-                        showMarker = false;
-                    }
-                    if (showMarker) {
-                        marker.addTo(map);
-                    }
-                }
-            });
-        }
-
-        // Manejar carga de archivos
-        function handleFileUpload(event) {
-            const files = event.target.files;
-            const uploadedFilesDiv = document.getElementById('uploadedFiles');
-            
-            Array.from(files).forEach(file => {
-                const fileDiv = document.createElement('div');
-                fileDiv.style.cssText = `
-                    background: rgba(102, 126, 234, 0.1);
-                    padding: 0.5rem;
-                    margin: 0.5rem 0;
-                    border-radius: 5px;
-                    border-left: 4px solid #667eea;
-                `;
-                fileDiv.innerHTML = `
-                    <i class="fas fa-file"></i> ${file.name}
-                    <small style="color: #666; margin-left: 10px;">(${(file.size / 1024).toFixed(1)} KB)</small>
-                `;
-                uploadedFilesDiv.appendChild(fileDiv);
-            });
-
-            // Simular procesamiento
-            setTimeout(() => {
-                alert(`Se han cargado ${files.length} archivo(s) exitosamente.`);
-            }, 1000);
-        }
-
-        // Abrir modal
-        function openModal() {
-            document.getElementById('infoModal').style.display = 'block';
-        }
-
-        // Cerrar modal
-        function closeModal() {
-            document.getElementById('infoModal').style.display = 'none';
-        }
-
-        // Cerrar modal al hacer clic fuera
-        window.onclick = function(event) {
-            const modal = document.getElementById('infoModal');
-            if (event.target === modal) {
-                modal.style.display = 'none';
+            } else {
+                showMessage('Geolocalización no soportada por este navegador', 'error');
             }
         }
 
-        // Exportar datos
-        function exportData() {
-            const visibleMarkers = markers.filter(marker => map.hasLayer(marker));
-            const data = visibleMarkers.map(marker => marker.data);
+        // Limpiar mapa
+        function clearMap() {
+            if (currentMarker) {
+                map.removeLayer(currentMarker);
+                currentMarker = null;
+            }
+            document.getElementById('latitud').value = '';
+            document.getElementById('longitud').value = '';
+        }
+
+        // Mostrar mensaje de estado
+        function showMessage(message, type) {
+            const statusDiv = document.getElementById('status-message');
+            statusDiv.textContent = message;
+            statusDiv.className = `status-message ${type} show`;
             
-            const csv = [
-                ['ID', 'Nombre', 'Tipo', 'Riesgo', 'Latitud', 'Longitud', 'Fecha', 'Afectados'],
-                ...data.map(item => [item.id, item.name, item.type, item.risk, item.lat, item.lng, item.
+            setTimeout(() => {
+                statusDiv.classList.remove('show');
+            }, 3000);
+        }
+
+        // Manejar selección de archivos
+        document.getElementById('archivos').addEventListener('change', function(e) {
+            const files = e.target.files;
+            const fileInfo = document.getElementById('file-info');
+            
+            if (files.length > 0) {
+                let fileText = `Archivos seleccionados (${files.length}): `;
+                for (let i = 0; i < files.length; i++) {
+                    fileText += files[i].name;
+                    if (i < files.length - 1) fileText += ', ';
+                }
+                fileInfo.textContent = fileText;
+                fileInfo.style.display = 'block';
+            } else {
+                fileInfo.style.display = 'none';
+            }
+        });
+
+        // Manejar envío del formulario
+        document.getElementById('reportForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const reporte = {
+                id: Date.now(),
+                titulo: formData.get('titulo'),
+                tipo: formData.get('tipo'),
+                latitud: parseFloat(formData.get('latitud')),
+                longitud: parseFloat(formData.get('longitud')),
+                descripcion: formData.get('descripcion'),
+                prioridad: formData.get('prioridad'),
+                reportado_por: formData.get('reportado_por'),
+                fecha: new Date().toISOString(),
+                archivos: formData.getAll('archivos')
+            };
+            
+            // Validar coordenadas
+            if (!reporte.latitud || !reporte.longitud) {
+                showMessage('Por favor, selecciona una ubicación en el mapa', 'error');
+                return;
+            }
+            
+            // Simular envío del reporte
+            reportes.push(reporte);
+            
+            // Añadir marcador permanente al mapa
+            const marker = L.marker([reporte.latitud, reporte.longitud]).addTo(map);
+            marker.bindPopup(`
+                <strong>${reporte.titulo}</strong><br>
+                Tipo: ${reporte.tipo}<br>
+                Prioridad: ${reporte.prioridad}<br>
+                Reportado por: ${reporte.reportado_por || 'Anónimo'}<br>
+                <em>${reporte.descripcion}</em>
+            `);
+            
+            // Limpiar formulario
+            this.reset();
+            clearMap();
+            document.getElementById('file-info').style.display = 'none';
+            
+            showMessage('Reporte enviado exitosamente', 'success');
+            
+            console.log('Reporte enviado:', reporte);
+        });
+
+        // Inicializar cuando se carga la página
+        window.addEventListener('load', function() {
+            initMap();
+        });
+    </script>
+</body>
+</html>
