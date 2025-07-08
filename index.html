@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Formulario con Geolocalización</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/supabase-js/2.39.0/umd/supabase.min.js"></script>
+    <title>Geoportal - Fenómenos de Remoción en Masa</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
             margin: 0;
@@ -15,489 +16,767 @@
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
+            color: #333;
+            overflow-x: hidden;
         }
 
-        .container {
+        .navbar {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            padding: 40px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            padding: 1rem 0;
+            position: fixed;
+            top: 0;
             width: 100%;
-            max-width: 600px;
-            animation: slideIn 0.5s ease-out;
+            z-index: 1000;
         }
 
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .navbar-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
-        h1 {
-            color: #333;
-            text-align: center;
-            margin-bottom: 30px;
-            font-size: 2.5rem;
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #667eea;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
-        .form-group {
-            margin-bottom: 25px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #333;
-            font-size: 1.1rem;
-        }
-
-        input, select, textarea {
-            width: 100%;
-            padding: 15px;
-            border: 2px solid #e1e5e9;
-            border-radius: 10px;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-            background: rgba(255, 255, 255, 0.9);
-        }
-
-        input:focus, select:focus, textarea:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-            transform: translateY(-2px);
-        }
-
-        textarea {
-            resize: vertical;
-            min-height: 120px;
-        }
-
-        .location-group {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
+        .nav-buttons {
+            display: flex;
+            gap: 1rem;
         }
 
         .btn {
+            padding: 0.6rem 1.2rem;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
             background: linear-gradient(45deg, #667eea, #764ba2);
             color: white;
-            padding: 15px 30px;
-            border: none;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.8);
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .btn-secondary:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .main-container {
+            margin-top: 80px;
+            padding: 2rem;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .hero {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .hero h1 {
+            font-size: 2.5rem;
+            color: white;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 2rem;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .sidebar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            height: fit-content;
+        }
+
+        .map-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 1rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        #map {
+            width: 100%;
+            height: 500px;
             border-radius: 10px;
-            font-size: 1.1rem;
-            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .section {
+            margin-bottom: 2rem;
+        }
+
+        .section h3 {
+            color: #667eea;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .file-upload {
+            background: linear-gradient(45deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            text-align: center;
             cursor: pointer;
             transition: all 0.3s ease;
-            width: 100%;
-            margin-top: 20px;
+            border: 2px dashed rgba(255, 255, 255, 0.3);
         }
 
-        .btn:hover {
+        .file-upload:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 6px 20px rgba(240, 147, 251, 0.4);
         }
 
-        .btn:active {
-            transform: translateY(0);
+        .file-upload input {
+            display: none;
         }
 
-        .btn-location {
-            background: linear-gradient(45deg, #4CAF50, #45a049);
-            margin-top: 10px;
-            padding: 10px 20px;
-            font-size: 0.9rem;
-        }
-
-        .status {
-            padding: 15px;
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+            background: white;
             border-radius: 10px;
-            margin-top: 20px;
-            font-weight: 500;
-            text-align: center;
-            opacity: 0;
-            transform: translateY(20px);
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .data-table th, .data-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .data-table th {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            font-weight: 600;
+        }
+
+        .data-table tr:hover {
+            background-color: #f8f9ff;
+        }
+
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .custom-checkbox {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #667eea;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
             transition: all 0.3s ease;
         }
 
-        .status.show {
-            opacity: 1;
-            transform: translateY(0);
+        .custom-checkbox.checked {
+            background: #667eea;
+            color: white;
         }
 
-        .success {
-            background: rgba(76, 175, 80, 0.1);
-            color: #2e7d32;
-            border: 1px solid rgba(76, 175, 80, 0.3);
+        .filter-section {
+            margin-bottom: 1.5rem;
         }
 
-        .error {
-            background: rgba(244, 67, 54, 0.1);
-            color: #c62828;
-            border: 1px solid rgba(244, 67, 54, 0.3);
+        .filter-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
         }
 
-        .loading {
-            background: rgba(255, 193, 7, 0.1);
-            color: #f57c00;
-            border: 1px solid rgba(255, 193, 7, 0.3);
-        }
-
-        .coordinates {
-            background: rgba(33, 150, 243, 0.1);
-            color: #1976d2;
-            border: 1px solid rgba(33, 150, 243, 0.3);
+        .filter-tag {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 0.3rem 0.8rem;
+            border-radius: 15px;
             font-size: 0.9rem;
-            padding: 10px;
-            border-radius: 8px;
-            margin-top: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
         }
 
-        .table-selector {
-            background: rgba(255, 152, 0, 0.1);
-            padding: 15px;
+        .filter-tag:hover {
+            transform: scale(1.05);
+        }
+
+        .filter-tag.active {
+            background: linear-gradient(45deg, #f093fb, #f5576c);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 1.5rem;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .legend {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 1rem;
             border-radius: 10px;
-            margin-bottom: 20px;
-            border: 1px solid rgba(255, 152, 0, 0.3);
+            margin-top: 1rem;
         }
 
-        .table-selector h3 {
-            color: #ef6c00;
-            margin-bottom: 10px;
-            font-size: 1.1rem;
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
         }
 
-        @media (max-width: 600px) {
-            .container {
-                padding: 20px;
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background: white;
+            margin: 5% auto;
+            padding: 2rem;
+            border-radius: 15px;
+            width: 80%;
+            max-width: 600px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: #667eea;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
             }
             
-            h1 {
+            .navbar-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .hero h1 {
                 font-size: 2rem;
             }
             
-            .location-group {
-                grid-template-columns: 1fr;
+            .main-container {
+                padding: 1rem;
             }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>📍 Formulario de Reportes</h1>
-        
-        <div class="table-selector">
-            <h3>⚠️ Selecciona la tabla de destino:</h3>
-            <select id="tabla_destino">
-                <option value="deslizamiento2010_2015">Deslizamientos 2010-2015 (Recomendado)</option>
-                <option value="deslizamiento2003_2010">Deslizamientos 2003-2010</option>
-                <option value="deslizamiento1999_2003">Deslizamientos 1999-2003</option>
-                <option value="urbano_dicf">Urbano DICF</option>
-                <option value="litologia">Litología</option>
-            </select>
-        </div>
-        
-        <form id="reportForm">
-            <div class="form-group">
-                <label for="nombre">Nombre:</label>
-                <input type="text" id="nombre" name="nombre" required>
+    <nav class="navbar">
+        <div class="navbar-content">
+            <div class="logo">
+                <i class="fas fa-mountain"></i>
+                GeoPortal REM
             </div>
-
-            <div class="form-group">
-                <label for="tipo_problema">Tipo de problema:</label>
-                <select id="tipo_problema" name="tipo_problema" required>
-                    <option value="">Selecciona un tipo</option>
-                    <option value="deslizamiento">Deslizamiento</option>
-                    <option value="erosion">Erosión</option>
-                    <option value="inundacion">Inundación</option>
-                    <option value="agrietamiento">Agrietamiento</option>
-                    <option value="hundimiento">Hundimiento</option>
-                    <option value="infraestructura">Infraestructura</option>
-                    <option value="servicios">Servicios públicos</option>
-                    <option value="seguridad">Seguridad</option>
-                    <option value="ambiente">Medio ambiente</option>
-                    <option value="transporte">Transporte</option>
-                    <option value="otro">Otro</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label for="observaciones">Observaciones:</label>
-                <textarea id="observaciones" name="observaciones" placeholder="Describe el problema en detalle..."></textarea>
-            </div>
-
-            <div class="form-group">
-                <label>📍 Ubicación:</label>
-                <button type="button" class="btn btn-location" onclick="getLocation()">
-                    🌍 Obtener mi ubicación actual
+            <div class="nav-buttons">
+                <button class="btn btn-secondary" onclick="openModal()">
+                    <i class="fas fa-info-circle"></i> Información
                 </button>
-                
-                <div class="location-group" style="margin-top: 15px;">
-                    <div>
-                        <label for="latitud">Latitud:</label>
-                        <input type="number" id="latitud" name="latitud" step="any" readonly>
+                <button class="btn btn-primary" onclick="exportData()">
+                    <i class="fas fa-download"></i> Exportar
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <div class="hero">
+            <h1><i class="fas fa-globe-americas"></i> Geoportal de Fenómenos de Remoción en Masa</h1>
+            <p>Sistema integrado para la visualización, análisis y gestión de datos relacionados con deslizamientos, flujos de detritos y otros fenómenos gravitacionales</p>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalEvents">0</div>
+                    <div class="stat-label">Eventos Registrados</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="activeReports">0</div>
+                    <div class="stat-label">Reportes Activos</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="highRiskAreas">0</div>
+                    <div class="stat-label">Áreas de Alto Riesgo</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard">
+            <div class="sidebar">
+                <div class="section">
+                    <h3><i class="fas fa-upload"></i> Cargar Reportes</h3>
+                    <div class="file-upload" onclick="document.getElementById('fileInput').click()">
+                        <i class="fas fa-cloud-upload-alt" style="font-size: 2rem; margin-bottom: 0.5rem;"></i>
+                        <div>Arrastra archivos aquí o haz clic para seleccionar</div>
+                        <small>Formatos: CSV, JSON, KML, SHP</small>
+                        <input type="file" id="fileInput" accept=".csv,.json,.kml,.shp" multiple>
                     </div>
-                    <div>
-                        <label for="longitud">Longitud:</label>
-                        <input type="number" id="longitud" name="longitud" step="any" readonly>
+                    <div id="uploadedFiles"></div>
+                </div>
+
+                <div class="section">
+                    <h3><i class="fas fa-filter"></i> Filtros</h3>
+                    <div class="filter-section">
+                        <label><strong>Tipo de Fenómeno:</strong></label>
+                        <div class="filter-group">
+                            <div class="filter-tag active" data-filter="all">Todos</div>
+                            <div class="filter-tag" data-filter="deslizamiento">Deslizamientos</div>
+                            <div class="filter-tag" data-filter="flujo">Flujos</div>
+                            <div class="filter-tag" data-filter="caida">Caídas</div>
+                            <div class="filter-tag" data-filter="volcamiento">Volcamientos</div>
+                        </div>
+                    </div>
+                    
+                    <div class="filter-section">
+                        <label><strong>Nivel de Riesgo:</strong></label>
+                        <div class="filter-group">
+                            <div class="filter-tag active" data-filter="risk-all">Todos</div>
+                            <div class="filter-tag" data-filter="risk-bajo">Bajo</div>
+                            <div class="filter-tag" data-filter="risk-medio">Medio</div>
+                            <div class="filter-tag" data-filter="risk-alto">Alto</div>
+                        </div>
                     </div>
                 </div>
-                
-                <div id="coordinates" class="coordinates" style="display: none;"></div>
+
+                <div class="section">
+                    <h3><i class="fas fa-table"></i> Capas de Datos</h3>
+                    <div class="data-table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Mostrar</th>
+                                    <th>Capa</th>
+                                    <th>Eventos</th>
+                                </tr>
+                            </thead>
+                            <tbody id="layerTable">
+                                <!-- Se llenará dinámicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="legend">
+                    <h4><i class="fas fa-map-marked-alt"></i> Leyenda</h4>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #ff4444;"></div>
+                        <span>Alto Riesgo</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #ffaa00;"></div>
+                        <span>Riesgo Medio</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #00aa00;"></div>
+                        <span>Riesgo Bajo</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #4444ff;"></div>
+                        <span>Zona Monitoreada</span>
+                    </div>
+                </div>
             </div>
 
-            <button type="submit" class="btn">
-                📤 Enviar Reporte
-            </button>
-        </form>
-
-        <div id="status" class="status"></div>
+            <div class="map-container">
+                <h3><i class="fas fa-map"></i> Mapa Interactivo</h3>
+                <div id="map"></div>
+            </div>
+        </div>
     </div>
 
+    <!-- Modal -->
+    <div id="infoModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2><i class="fas fa-info-circle"></i> Información del Sistema</h2>
+            <p><strong>Geoportal de Fenómenos de Remoción en Masa</strong></p>
+            <p>Este sistema permite la visualización y análisis de datos relacionados con movimientos de masa gravitacionales, incluyendo:</p>
+            <ul>
+                <li>Deslizamientos rotacionales y traslacionales</li>
+                <li>Flujos de detritos y lodo</li>
+                <li>Caídas de rocas y detritos</li>
+                <li>Volcamientos y toppling</li>
+                <li>Reptación y movimientos lentos</li>
+            </ul>
+            <p><strong>Funcionalidades:</strong></p>
+            <ul>
+                <li>Visualización interactiva en mapa</li>
+                <li>Carga de datos en múltiples formatos</li>
+                <li>Filtrado por tipo y nivel de riesgo</li>
+                <li>Análisis temporal y espacial</li>
+                <li>Exportación de reportes</li>
+            </ul>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
     <script>
-        // Configuración de Supabase
-        const supabaseUrl = 'https://lhhaxlwnpqzqavwtlemk.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxoaGF4bHducHF6cWF2d3RsZW1rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAxMjAwNzYsImV4cCI6MjA2NTY5NjA3Nn0.TofQW1f-n1Zah-w5OlLDWHYzTiORLUA2285rfd5GjQs';
-        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+        // Inicializar mapa
+        const map = L.map('map').setView([-4.0, -79.2], 8); // Coordenadas de Ecuador
 
-        // Función para mostrar estado
-        function showStatus(message, type) {
-            const statusDiv = document.getElementById('status');
-            statusDiv.textContent = message;
-            statusDiv.className = `status ${type} show`;
-            
-            if (type === 'success') {
-                setTimeout(() => {
-                    statusDiv.classList.remove('show');
-                }, 5000);
-            }
+        // Agregar capa base
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Datos de ejemplo
+        const sampleData = [
+            { id: 1, name: 'Deslizamiento Cuenca', type: 'deslizamiento', risk: 'alto', lat: -2.9, lng: -79.0, date: '2024-01-15', affected: 25 },
+            { id: 2, name: 'Flujo Loja', type: 'flujo', risk: 'medio', lat: -4.0, lng: -79.2, date: '2024-02-10', affected: 12 },
+            { id: 3, name: 'Caída Rocas Azogues', type: 'caida', risk: 'bajo', lat: -2.7, lng: -78.8, date: '2024-03-05', affected: 5 },
+            { id: 4, name: 'Deslizamiento Zamora', type: 'deslizamiento', risk: 'alto', lat: -4.1, lng: -78.9, date: '2024-03-20', affected: 30 },
+            { id: 5, name: 'Volcamiento Yantzaza', type: 'volcamiento', risk: 'medio', lat: -3.8, lng: -78.7, date: '2024-04-01', affected: 8 }
+        ];
+
+        // Capas de datos
+        const dataLayers = [
+            { name: 'Deslizamientos', type: 'deslizamiento', visible: true, count: 0 },
+            { name: 'Flujos de Detritos', type: 'flujo', visible: true, count: 0 },
+            { name: 'Caídas de Rocas', type: 'caida', visible: true, count: 0 },
+            { name: 'Volcamientos', type: 'volcamiento', visible: true, count: 0 }
+        ];
+
+        let markers = [];
+        let currentFilter = 'all';
+        let currentRiskFilter = 'risk-all';
+
+        // Colores por nivel de riesgo
+        const riskColors = {
+            'alto': '#ff4444',
+            'medio': '#ffaa00',
+            'bajo': '#00aa00'
+        };
+
+        // Inicializar aplicación
+        function initializeApp() {
+            loadSampleData();
+            setupEventListeners();
+            updateStats();
+            updateLayerTable();
         }
 
-        // Función para obtener geolocalización
-        function getLocation() {
-            if (navigator.geolocation) {
-                showStatus('🌍 Obteniendo ubicación...', 'loading');
-                
-                navigator.geolocation.getCurrentPosition(
-                    function(position) {
-                        const lat = position.coords.latitude;
-                        const lng = position.coords.longitude;
-                        
-                        document.getElementById('latitud').value = lat;
-                        document.getElementById('longitud').value = lng;
-                        
-                        const coordsDiv = document.getElementById('coordinates');
-                        coordsDiv.innerHTML = `
-                            <strong>📍 Ubicación obtenida:</strong><br>
-                            Latitud: ${lat.toFixed(6)}<br>
-                            Longitud: ${lng.toFixed(6)}<br>
-                            Precisión: ±${position.coords.accuracy.toFixed(0)} metros
-                        `;
-                        coordsDiv.style.display = 'block';
-                        
-                        showStatus('✅ Ubicación obtenida correctamente', 'success');
-                    },
-                    function(error) {
-                        let errorMessage = '';
-                        switch(error.code) {
-                            case error.PERMISSION_DENIED:
-                                errorMessage = 'Permiso denegado. Por favor, permite el acceso a la ubicación.';
-                                break;
-                            case error.POSITION_UNAVAILABLE:
-                                errorMessage = 'Ubicación no disponible.';
-                                break;
-                            case error.TIMEOUT:
-                                errorMessage = 'Tiempo de espera agotado.';
-                                break;
-                            default:
-                                errorMessage = 'Error desconocido.';
-                                break;
-                        }
-                        showStatus('❌ Error al obtener ubicación: ' + errorMessage, 'error');
-                    },
-                    {
-                        enableHighAccuracy: true,
-                        timeout: 10000,
-                        maximumAge: 60000
-                    }
-                );
-            } else {
-                showStatus('❌ La geolocalización no está soportada en este navegador', 'error');
-            }
+        // Cargar datos de ejemplo
+        function loadSampleData() {
+            sampleData.forEach(item => {
+                addMarkerToMap(item);
+            });
         }
 
-        // Función para verificar estructura de tabla
-        async function checkTableStructure(tableName) {
-            try {
-                const { data, error } = await supabase
-                    .from(tableName)
-                    .select('*')
-                    .limit(1);
-                
-                if (error) {
-                    console.error(`Error verificando tabla ${tableName}:`, error);
-                    return { success: false, error: error.message };
-                }
-                
-                return { success: true, data };
-            } catch (error) {
-                console.error(`Error verificando tabla ${tableName}:`, error);
-                return { success: false, error: error.message };
-            }
+        // Agregar marcador al mapa
+        function addMarkerToMap(data) {
+            const color = riskColors[data.risk] || '#4444ff';
+            
+            const marker = L.circleMarker([data.lat, data.lng], {
+                color: color,
+                fillColor: color,
+                fillOpacity: 0.6,
+                radius: 8,
+                weight: 2
+            }).addTo(map);
+
+            const popupContent = `
+                <div style="font-family: Arial, sans-serif;">
+                    <h4 style="margin: 0 0 10px 0; color: #667eea;">${data.name}</h4>
+                    <p style="margin: 5px 0;"><strong>Tipo:</strong> ${data.type}</p>
+                    <p style="margin: 5px 0;"><strong>Riesgo:</strong> <span style="color: ${color}; font-weight: bold;">${data.risk.toUpperCase()}</span></p>
+                    <p style="margin: 5px 0;"><strong>Fecha:</strong> ${data.date}</p>
+                    <p style="margin: 5px 0;"><strong>Afectados:</strong> ${data.affected} personas</p>
+                </div>
+            `;
+
+            marker.bindPopup(popupContent);
+            marker.data = data;
+            markers.push(marker);
         }
 
-        // Función para insertar datos de manera flexible
-        async function insertReport(formData, tableName) {
-            try {
-                // Primero verificamos la estructura de la tabla
-                const tableCheck = await checkTableStructure(tableName);
-                if (!tableCheck.success) {
-                    throw new Error(`No se puede acceder a la tabla ${tableName}: ${tableCheck.error}`);
-                }
-
-                // Preparamos los datos básicos que intentaremos insertar
-                const baseData = {
-                    latitud: parseFloat(formData.latitud) || null,
-                    longitud: parseFloat(formData.longitud) || null,
-                    lat: parseFloat(formData.latitud) || null, // Alternativa común
-                    lng: parseFloat(formData.longitud) || null, // Alternativa común
-                    longitude: parseFloat(formData.longitud) || null, // Alternativa común
-                    latitude: parseFloat(formData.latitud) || null, // Alternativa común
-                    tipo: formData.tipo_problema || null,
-                    tipo_problema: formData.tipo_problema || null,
-                    descripcion: formData.observaciones || null,
-                    observaciones: formData.observaciones || null,
-                    nombre: formData.nombre || null,
-                    reporter: formData.nombre || null,
-                    fecha: new Date().toISOString(),
-                    created_at: new Date().toISOString(),
-                    timestamp: new Date().toISOString()
-                };
-
-                // Intentamos insertar los datos
-                const { data, error } = await supabase
-                    .from(tableName)
-                    .insert([baseData]);
-
-                if (error) {
-                    throw error;
-                }
-
-                return { success: true, data };
-            } catch (error) {
-                console.error('Error insertando datos:', error);
-                return { success: false, error: error.message };
-            }
-        }
-
-        // Función para probar inserción con datos mínimos
-        async function insertMinimalData(formData, tableName) {
-            try {
-                const minimalData = {
-                    latitud: parseFloat(formData.latitud),
-                    longitud: parseFloat(formData.longitud)
-                };
-
-                const { data, error } = await supabase
-                    .from(tableName)
-                    .insert([minimalData]);
-
-                if (error) {
-                    throw error;
-                }
-
-                return { success: true, data };
-            } catch (error) {
-                console.error('Error con datos mínimos:', error);
-                return { success: false, error: error.message };
-            }
-        }
-
-        // Manejar envío del formulario
-        document.getElementById('reportForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const formData = new FormData(this);
-            const data = Object.fromEntries(formData);
-            const tableName = document.getElementById('tabla_destino').value;
-            
-            // Validar que se tenga ubicación
-            if (!data.latitud || !data.longitud) {
-                showStatus('❌ Por favor, obtén tu ubicación antes de enviar', 'error');
-                return;
-            }
-            
-            showStatus('📤 Enviando reporte...', 'loading');
-            
-            // Intentar insertar datos completos
-            let result = await insertReport(data, tableName);
-            
-            // Si falla, intentar con datos mínimos
-            if (!result.success) {
-                showStatus('⚠️ Intentando con datos básicos...', 'loading');
-                result = await insertMinimalData(data, tableName);
-            }
-            
-            if (result.success) {
-                showStatus('✅ Reporte enviado exitosamente', 'success');
-                this.reset();
-                document.getElementById('coordinates').style.display = 'none';
-            } else {
-                showStatus('❌ Error al enviar: ' + result.error, 'error');
-                console.error('Detalles del error:', result.error);
-            }
-        });
-
-        // Obtener ubicación automáticamente al cargar la página
-        window.addEventListener('load', function() {
-            setTimeout(() => {
-                getLocation();
-            }, 1000);
-        });
-
-        // Función para probar conexión a las tablas
-        async function testTableConnections() {
-            const tables = ['deslizamiento2010_2015', 'deslizamiento2003_2010', 'deslizamiento1999_2003', 'urbano_dicf', 'litologia'];
-            
-            for (const table of tables) {
-                try {
-                    const { data, error } = await supabase
-                        .from(table)
-                        .select('*')
-                        .limit(1);
+        // Configurar event listeners
+        function setupEventListeners() {
+            // Filtros de tipo
+            document.querySelectorAll('.filter-tag').forEach(tag => {
+                tag.addEventListener('click', function() {
+                    const filterType = this.getAttribute('data-filter');
                     
-                    if (error) {
-                        console.error(`❌ Tabla ${table}: ${error.message}`);
+                    if (filterType.startsWith('risk-')) {
+                        document.querySelectorAll('.filter-tag[data-filter^="risk-"]').forEach(t => t.classList.remove('active'));
+                        this.classList.add('active');
+                        currentRiskFilter = filterType;
                     } else {
-                        console.log(`✅ Tabla ${table}: Accesible`);
-                        if (data && data.length > 0) {
-                            console.log(`   Columnas detectadas:`, Object.keys(data[0]));
-                        }
+                        document.querySelectorAll('.filter-tag:not([data-filter^="risk-"])').forEach(t => t.classList.remove('active'));
+                        this.classList.add('active');
+                        currentFilter = filterType;
                     }
-                } catch (error) {
-                    console.error(`❌ Tabla ${table}: Error de conexión`);
+                    
+                    applyFilters();
+                });
+            });
+
+            // Carga de archivos
+            document.getElementById('fileInput').addEventListener('change', handleFileUpload);
+
+            // Drag and drop
+            const fileUpload = document.querySelector('.file-upload');
+            fileUpload.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                fileUpload.style.background = 'linear-gradient(45deg, #667eea, #764ba2)';
+            });
+
+            fileUpload.addEventListener('dragleave', () => {
+                fileUpload.style.background = 'linear-gradient(45deg, #f093fb 0%, #f5576c 100%)';
+            });
+
+            fileUpload.addEventListener('drop', (e) => {
+                e.preventDefault();
+                fileUpload.style.background = 'linear-gradient(45deg, #f093fb 0%, #f5576c 100%)';
+                const files = e.dataTransfer.files;
+                handleFileUpload({ target: { files } });
+            });
+        }
+
+        // Aplicar filtros
+        function applyFilters() {
+            markers.forEach(marker => {
+                const data = marker.data;
+                let showMarker = true;
+
+                // Filtro por tipo
+                if (currentFilter !== 'all' && data.type !== currentFilter) {
+                    showMarker = false;
                 }
+
+                // Filtro por riesgo
+                if (currentRiskFilter !== 'risk-all' && data.risk !== currentRiskFilter.replace('risk-', '')) {
+                    showMarker = false;
+                }
+
+                if (showMarker) {
+                    marker.addTo(map);
+                } else {
+                    map.removeLayer(marker);
+                }
+            });
+
+            updateStats();
+        }
+
+        // Actualizar estadísticas
+        function updateStats() {
+            const visibleMarkers = markers.filter(marker => map.hasLayer(marker));
+            document.getElementById('totalEvents').textContent = visibleMarkers.length;
+            document.getElementById('activeReports').textContent = visibleMarkers.filter(m => m.data.risk === 'alto').length;
+            document.getElementById('highRiskAreas').textContent = visibleMarkers.filter(m => m.data.risk === 'alto').length;
+        }
+
+        // Actualizar tabla de capas
+        function updateLayerTable() {
+            const tbody = document.getElementById('layerTable');
+            tbody.innerHTML = '';
+
+            dataLayers.forEach((layer, index) => {
+                const count = sampleData.filter(item => item.type === layer.type).length;
+                layer.count = count;
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>
+                        <div class="checkbox-container">
+                            <div class="custom-checkbox ${layer.visible ? 'checked' : ''}" onclick="toggleLayer(${index})">
+                                ${layer.visible ? '<i class="fas fa-check"></i>' : ''}
+                            </div>
+                        </div>
+                    </td>
+                    <td>${layer.name}</td>
+                    <td>${count}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Toggle visibilidad de capa
+        function toggleLayer(index) {
+            dataLayers[index].visible = !dataLayers[index].visible;
+            updateLayerTable();
+            
+            // Actualizar visibilidad de marcadores
+            markers.forEach(marker => {
+                const layerForMarker = dataLayers.find(layer => layer.type === marker.data.type);
+                if (layerForMarker && !layerForMarker.visible) {
+                    map.removeLayer(marker);
+                } else if (layerForMarker && layerForMarker.visible) {
+                    // Solo agregar si pasa los filtros actuales
+                    let showMarker = true;
+                    if (currentFilter !== 'all' && marker.data.type !== currentFilter) {
+                        showMarker = false;
+                    }
+                    if (currentRiskFilter !== 'risk-all' && marker.data.risk !== currentRiskFilter.replace('risk-', '')) {
+                        showMarker = false;
+                    }
+                    if (showMarker) {
+                        marker.addTo(map);
+                    }
+                }
+            });
+        }
+
+        // Manejar carga de archivos
+        function handleFileUpload(event) {
+            const files = event.target.files;
+            const uploadedFilesDiv = document.getElementById('uploadedFiles');
+            
+            Array.from(files).forEach(file => {
+                const fileDiv = document.createElement('div');
+                fileDiv.style.cssText = `
+                    background: rgba(102, 126, 234, 0.1);
+                    padding: 0.5rem;
+                    margin: 0.5rem 0;
+                    border-radius: 5px;
+                    border-left: 4px solid #667eea;
+                `;
+                fileDiv.innerHTML = `
+                    <i class="fas fa-file"></i> ${file.name}
+                    <small style="color: #666; margin-left: 10px;">(${(file.size / 1024).toFixed(1)} KB)</small>
+                `;
+                uploadedFilesDiv.appendChild(fileDiv);
+            });
+
+            // Simular procesamiento
+            setTimeout(() => {
+                alert(`Se han cargado ${files.length} archivo(s) exitosamente.`);
+            }, 1000);
+        }
+
+        // Abrir modal
+        function openModal() {
+            document.getElementById('infoModal').style.display = 'block';
+        }
+
+        // Cerrar modal
+        function closeModal() {
+            document.getElementById('infoModal').style.display = 'none';
+        }
+
+        // Cerrar modal al hacer clic fuera
+        window.onclick = function(event) {
+            const modal = document.getElementById('infoModal');
+            if (event.target === modal) {
+                modal.style.display = 'none';
             }
         }
 
-        // Ejecutar prueba de conexión al cargar (opcional, para debugging)
-        // testTableConnections();
-    </script>
-</body>
-</html>
+        // Exportar datos
+        function exportData() {
+            const visibleMarkers = markers.filter(marker => map.hasLayer(marker));
+            const data = visibleMarkers.map(marker => marker.data);
+            
+            const csv = [
+                ['ID', 'Nombre', 'Tipo', 'Riesgo', 'Latitud', 'Longitud', 'Fecha', 'Afectados'],
+                ...data.map(item => [item.id, item.name, item.type, item.risk, item.lat, item.lng, item.
