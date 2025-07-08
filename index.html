@@ -3,81 +3,501 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mi Geoportal - Bienvenida</title>
+    <title>Formulario con Geolocalización</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/supabase-js/2.39.0/umd/supabase.min.js"></script>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        * {
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             display: flex;
-            justify-content: center;
             align-items: center;
+            justify-content: center;
+            padding: 20px;
         }
-        
+
         .container {
-            background: white;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
             padding: 40px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            text-align: center;
-            max-width: 500px;
-            margin: 20px;
+            width: 100%;
+            max-width: 600px;
+            animation: slideIn 0.5s ease-out;
         }
-        
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
         h1 {
             color: #333;
-            font-size: 2.5em;
-            margin-bottom: 20px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-        }
-        
-        .subtitle {
-            color: #666;
-            font-size: 1.2em;
+            text-align: center;
             margin-bottom: 30px;
-            line-height: 1.6;
+            font-size: 2.5rem;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
-        
-        .map-icon {
-            font-size: 4em;
-            color: #667eea;
-            margin-bottom: 20px;
+
+        .form-group {
+            margin-bottom: 25px;
         }
-        
-        .welcome-text {
-            background: #f8f9fa;
-            padding: 20px;
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 1.1rem;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e1e5e9;
             border-radius: 10px;
-            border-left: 4px solid #667eea;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .location-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
             margin-top: 20px;
         }
-        
-        .footer {
-            margin-top: 30px;
-            color: #888;
-            font-size: 0.9em;
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-location {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            margin-top: 10px;
+            padding: 10px 20px;
+            font-size: 0.9rem;
+        }
+
+        .status {
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            font-weight: 500;
+            text-align: center;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+        }
+
+        .status.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .success {
+            background: rgba(76, 175, 80, 0.1);
+            color: #2e7d32;
+            border: 1px solid rgba(76, 175, 80, 0.3);
+        }
+
+        .error {
+            background: rgba(244, 67, 54, 0.1);
+            color: #c62828;
+            border: 1px solid rgba(244, 67, 54, 0.3);
+        }
+
+        .loading {
+            background: rgba(255, 193, 7, 0.1);
+            color: #f57c00;
+            border: 1px solid rgba(255, 193, 7, 0.3);
+        }
+
+        .coordinates {
+            background: rgba(33, 150, 243, 0.1);
+            color: #1976d2;
+            border: 1px solid rgba(33, 150, 243, 0.3);
+            font-size: 0.9rem;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+
+        .table-selector {
+            background: rgba(255, 152, 0, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 152, 0, 0.3);
+        }
+
+        .table-selector h3 {
+            color: #ef6c00;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .location-group {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="map-icon">🗺️</div>
-        <h1>¡Hola Mundo!</h1>
-        <div class="subtitle">
-            Bienvenido a la exploracion <strong>Geoportal</strong>
+        <h1>📍 Formulario de Reportes</h1>
+        
+        <div class="table-selector">
+            <h3>⚠️ Selecciona la tabla de destino:</h3>
+            <select id="tabla_destino">
+                <option value="deslizamiento2010_2015">Deslizamientos 2010-2015 (Recomendado)</option>
+                <option value="deslizamiento2003_2010">Deslizamientos 2003-2010</option>
+                <option value="deslizamiento1999_2003">Deslizamientos 1999-2003</option>
+                <option value="urbano_dicf">Urbano DICF</option>
+                <option value="litologia">Litología</option>
+            </select>
         </div>
         
-        <div class="welcome-text">
-            <p>👋 ¡Saludos desde Ecuador! </p>
-            <p>Este es mi geoportal donde trabajo con datos espaciales, mapas interactivos y análisis geográfico.</p>
-            <p>🌍 Explorando el mundo a través de la geografía y los SIG</p>
-        </div>
-        
-        <div class="footer">
-            <p>Desarrollado con PostGIS y mucho ☕</p>
-        </div>
+        <form id="reportForm">
+            <div class="form-group">
+                <label for="nombre">Nombre:</label>
+                <input type="text" id="nombre" name="nombre" required>
+            </div>
+
+            <div class="form-group">
+                <label for="tipo_problema">Tipo de problema:</label>
+                <select id="tipo_problema" name="tipo_problema" required>
+                    <option value="">Selecciona un tipo</option>
+                    <option value="deslizamiento">Deslizamiento</option>
+                    <option value="erosion">Erosión</option>
+                    <option value="inundacion">Inundación</option>
+                    <option value="agrietamiento">Agrietamiento</option>
+                    <option value="hundimiento">Hundimiento</option>
+                    <option value="infraestructura">Infraestructura</option>
+                    <option value="servicios">Servicios públicos</option>
+                    <option value="seguridad">Seguridad</option>
+                    <option value="ambiente">Medio ambiente</option>
+                    <option value="transporte">Transporte</option>
+                    <option value="otro">Otro</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="observaciones">Observaciones:</label>
+                <textarea id="observaciones" name="observaciones" placeholder="Describe el problema en detalle..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>📍 Ubicación:</label>
+                <button type="button" class="btn btn-location" onclick="getLocation()">
+                    🌍 Obtener mi ubicación actual
+                </button>
+                
+                <div class="location-group" style="margin-top: 15px;">
+                    <div>
+                        <label for="latitud">Latitud:</label>
+                        <input type="number" id="latitud" name="latitud" step="any" readonly>
+                    </div>
+                    <div>
+                        <label for="longitud">Longitud:</label>
+                        <input type="number" id="longitud" name="longitud" step="any" readonly>
+                    </div>
+                </div>
+                
+                <div id="coordinates" class="coordinates" style="display: none;"></div>
+            </div>
+
+            <button type="submit" class="btn">
+                📤 Enviar Reporte
+            </button>
+        </form>
+
+        <div id="status" class="status"></div>
     </div>
+
+    <script>
+        // Configuración de Supabase
+        const supabaseUrl = 'https://lhhaxlwnpqzqavwtlemk.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxoaGF4bHducHF6cWF2d3RsZW1rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAxMjAwNzYsImV4cCI6MjA2NTY5NjA3Nn0.TofQW1f-n1Zah-w5OlLDWHYzTiORLUA2285rfd5GjQs';
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+        // Función para mostrar estado
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type} show`;
+            
+            if (type === 'success') {
+                setTimeout(() => {
+                    statusDiv.classList.remove('show');
+                }, 5000);
+            }
+        }
+
+        // Función para obtener geolocalización
+        function getLocation() {
+            if (navigator.geolocation) {
+                showStatus('🌍 Obteniendo ubicación...', 'loading');
+                
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+                        
+                        document.getElementById('latitud').value = lat;
+                        document.getElementById('longitud').value = lng;
+                        
+                        const coordsDiv = document.getElementById('coordinates');
+                        coordsDiv.innerHTML = `
+                            <strong>📍 Ubicación obtenida:</strong><br>
+                            Latitud: ${lat.toFixed(6)}<br>
+                            Longitud: ${lng.toFixed(6)}<br>
+                            Precisión: ±${position.coords.accuracy.toFixed(0)} metros
+                        `;
+                        coordsDiv.style.display = 'block';
+                        
+                        showStatus('✅ Ubicación obtenida correctamente', 'success');
+                    },
+                    function(error) {
+                        let errorMessage = '';
+                        switch(error.code) {
+                            case error.PERMISSION_DENIED:
+                                errorMessage = 'Permiso denegado. Por favor, permite el acceso a la ubicación.';
+                                break;
+                            case error.POSITION_UNAVAILABLE:
+                                errorMessage = 'Ubicación no disponible.';
+                                break;
+                            case error.TIMEOUT:
+                                errorMessage = 'Tiempo de espera agotado.';
+                                break;
+                            default:
+                                errorMessage = 'Error desconocido.';
+                                break;
+                        }
+                        showStatus('❌ Error al obtener ubicación: ' + errorMessage, 'error');
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 60000
+                    }
+                );
+            } else {
+                showStatus('❌ La geolocalización no está soportada en este navegador', 'error');
+            }
+        }
+
+        // Función para verificar estructura de tabla
+        async function checkTableStructure(tableName) {
+            try {
+                const { data, error } = await supabase
+                    .from(tableName)
+                    .select('*')
+                    .limit(1);
+                
+                if (error) {
+                    console.error(`Error verificando tabla ${tableName}:`, error);
+                    return { success: false, error: error.message };
+                }
+                
+                return { success: true, data };
+            } catch (error) {
+                console.error(`Error verificando tabla ${tableName}:`, error);
+                return { success: false, error: error.message };
+            }
+        }
+
+        // Función para insertar datos de manera flexible
+        async function insertReport(formData, tableName) {
+            try {
+                // Primero verificamos la estructura de la tabla
+                const tableCheck = await checkTableStructure(tableName);
+                if (!tableCheck.success) {
+                    throw new Error(`No se puede acceder a la tabla ${tableName}: ${tableCheck.error}`);
+                }
+
+                // Preparamos los datos básicos que intentaremos insertar
+                const baseData = {
+                    latitud: parseFloat(formData.latitud) || null,
+                    longitud: parseFloat(formData.longitud) || null,
+                    lat: parseFloat(formData.latitud) || null, // Alternativa común
+                    lng: parseFloat(formData.longitud) || null, // Alternativa común
+                    longitude: parseFloat(formData.longitud) || null, // Alternativa común
+                    latitude: parseFloat(formData.latitud) || null, // Alternativa común
+                    tipo: formData.tipo_problema || null,
+                    tipo_problema: formData.tipo_problema || null,
+                    descripcion: formData.observaciones || null,
+                    observaciones: formData.observaciones || null,
+                    nombre: formData.nombre || null,
+                    reporter: formData.nombre || null,
+                    fecha: new Date().toISOString(),
+                    created_at: new Date().toISOString(),
+                    timestamp: new Date().toISOString()
+                };
+
+                // Intentamos insertar los datos
+                const { data, error } = await supabase
+                    .from(tableName)
+                    .insert([baseData]);
+
+                if (error) {
+                    throw error;
+                }
+
+                return { success: true, data };
+            } catch (error) {
+                console.error('Error insertando datos:', error);
+                return { success: false, error: error.message };
+            }
+        }
+
+        // Función para probar inserción con datos mínimos
+        async function insertMinimalData(formData, tableName) {
+            try {
+                const minimalData = {
+                    latitud: parseFloat(formData.latitud),
+                    longitud: parseFloat(formData.longitud)
+                };
+
+                const { data, error } = await supabase
+                    .from(tableName)
+                    .insert([minimalData]);
+
+                if (error) {
+                    throw error;
+                }
+
+                return { success: true, data };
+            } catch (error) {
+                console.error('Error con datos mínimos:', error);
+                return { success: false, error: error.message };
+            }
+        }
+
+        // Manejar envío del formulario
+        document.getElementById('reportForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData);
+            const tableName = document.getElementById('tabla_destino').value;
+            
+            // Validar que se tenga ubicación
+            if (!data.latitud || !data.longitud) {
+                showStatus('❌ Por favor, obtén tu ubicación antes de enviar', 'error');
+                return;
+            }
+            
+            showStatus('📤 Enviando reporte...', 'loading');
+            
+            // Intentar insertar datos completos
+            let result = await insertReport(data, tableName);
+            
+            // Si falla, intentar con datos mínimos
+            if (!result.success) {
+                showStatus('⚠️ Intentando con datos básicos...', 'loading');
+                result = await insertMinimalData(data, tableName);
+            }
+            
+            if (result.success) {
+                showStatus('✅ Reporte enviado exitosamente', 'success');
+                this.reset();
+                document.getElementById('coordinates').style.display = 'none';
+            } else {
+                showStatus('❌ Error al enviar: ' + result.error, 'error');
+                console.error('Detalles del error:', result.error);
+            }
+        });
+
+        // Obtener ubicación automáticamente al cargar la página
+        window.addEventListener('load', function() {
+            setTimeout(() => {
+                getLocation();
+            }, 1000);
+        });
+
+        // Función para probar conexión a las tablas
+        async function testTableConnections() {
+            const tables = ['deslizamiento2010_2015', 'deslizamiento2003_2010', 'deslizamiento1999_2003', 'urbano_dicf', 'litologia'];
+            
+            for (const table of tables) {
+                try {
+                    const { data, error } = await supabase
+                        .from(table)
+                        .select('*')
+                        .limit(1);
+                    
+                    if (error) {
+                        console.error(`❌ Tabla ${table}: ${error.message}`);
+                    } else {
+                        console.log(`✅ Tabla ${table}: Accesible`);
+                        if (data && data.length > 0) {
+                            console.log(`   Columnas detectadas:`, Object.keys(data[0]));
+                        }
+                    }
+                } catch (error) {
+                    console.error(`❌ Tabla ${table}: Error de conexión`);
+                }
+            }
+        }
+
+        // Ejecutar prueba de conexión al cargar (opcional, para debugging)
+        // testTableConnections();
+    </script>
 </body>
 </html>
