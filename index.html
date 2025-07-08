@@ -765,4 +765,286 @@
                 marker = L.circleMarker([item.lat, item.lng], {
                     color: color,
                     fillColor: color,
-                    fillOpacity:
+                    fillOpacity: 0.7,
+                    radius: 6,
+                    weight: 2
+                });
+
+                // Crear popup según el tipo de capa
+                let popupContent = '';
+                switch(layerName) {
+                    case 'deslizamiento1999_2003':
+                    case 'deslizamiento2003_2010':
+                    case 'deslizamiento2010_2015':
+                        popupContent = `
+                            <strong>Deslizamiento Histórico</strong><br>
+                            Período: ${item.periodo}<br>
+                            Fecha: ${item.fecha}<br>
+                            Tipo: ${item.tipo}<br>
+                            Magnitud: ${item.magnitud}<br>
+                            Coordenadas: ${item.lat.toFixed(6)}, ${item.lng.toFixed(6)}
+                        `;
+                        break;
+                    case 'litologia':
+                        popupContent = `
+                            <strong>Información Litológica</strong><br>
+                            Tipo de Roca: ${item.tipo}<br>
+                            Resistencia: ${item.resistencia}<br>
+                            Coordenadas: ${item.lat.toFixed(6)}, ${item.lng.toFixed(6)}
+                        `;
+                        break;
+                    case 'urbano_dicf':
+                        popupContent = `
+                            <strong>Área Urbana</strong><br>
+                            Nombre: ${item.nombre}<br>
+                            Población: ${item.poblacion.toLocaleString()}<br>
+                            Coordenadas: ${item.lat.toFixed(6)}, ${item.lng.toFixed(6)}
+                        `;
+                        break;
+                }
+
+                marker.bindPopup(popupContent);
+                layerGroups[layerName].addLayer(marker);
+            });
+
+            layerGroups[layerName].addTo(map);
+        }
+
+        function unloadLayer(layerName) {
+            map.removeLayer(layerGroups[layerName]);
+        }
+
+        function addMarker(lat, lng) {
+            if (currentMarker) {
+                map.removeLayer(currentMarker);
+            }
+            
+            currentMarker = L.marker([lat, lng], {
+                icon: L.divIcon({
+                    className: 'custom-marker',
+                    html: '<div style="background: #e74c3c; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);"></div>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10]
+                })
+            }).addTo(map);
+            
+            // Actualizar campos de coordenadas
+            document.getElementById('latitud').value = lat.toFixed(6);
+            document.getElementById('longitud').value = lng.toFixed(6);
+        }
+
+        function analyzeLocation(lat, lng) {
+            // Simular análisis de riesgo basado en la ubicación
+            const riesgoArea = calculateRiskLevel(lat, lng);
+            const pendiente = calculateSlope(lat, lng);
+            const estabilidad = calculateStability(riesgoArea, pendiente);
+
+            document.getElementById('riesgoArea').textContent = riesgoArea;
+            document.getElementById('pendiente').textContent = pendiente + '°';
+            document.getElementById('estabilidad').textContent = estabilidad;
+
+            // Actualizar colores de las tarjetas según el riesgo
+            updateRiskCards(riesgoArea, pendiente, estabilidad);
+        }
+
+        function calculateRiskLevel(lat, lng) {
+            // Simular cálculo de riesgo basado en proximidad a deslizamientos históricos
+            const riskLevels = ['BAJO', 'MEDIO', 'ALTO', 'CRÍTICO'];
+            return riskLevels[Math.floor(Math.random() * riskLevels.length)];
+        }
+
+        function calculateSlope(lat, lng) {
+            // Simular cálculo de pendiente
+            return (Math.random() * 45 + 5).toFixed(1);
+        }
+
+        function calculateStability(riesgo, pendiente) {
+            if (riesgo === 'CRÍTICO' || parseFloat(pendiente) > 35) return 'INESTABLE';
+            if (riesgo === 'ALTO' || parseFloat(pendiente) > 25) return 'MODERADO';
+            return 'ESTABLE';
+        }
+
+        function updateRiskCards(riesgo, pendiente, estabilidad) {
+            const riskCard = document.querySelector('.risk-card:first-child');
+            const slopeCard = document.querySelector('.risk-card:nth-child(2)');
+            const stabilityCard = document.querySelector('.risk-card:nth-child(3)');
+
+            // Actualizar colores según el riesgo
+            riskCard.className = 'risk-card ' + (riesgo === 'CRÍTICO' || riesgo === 'ALTO' ? 'high' : 
+                                                  riesgo === 'MEDIO' ? 'medium' : 'low');
+            slopeCard.className = 'risk-card ' + (parseFloat(pendiente) > 30 ? 'high' : 
+                                                  parseFloat(pendiente) > 20 ? 'medium' : 'low');
+            stabilityCard.className = 'risk-card ' + (estabilidad === 'INESTABLE' ? 'high' : 
+                                                      estabilidad === 'MODERADO' ? 'medium' : 'low');
+        }
+
+        function getCurrentLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    
+                    map.setView([lat, lng], 15);
+                    addMarker(lat, lng);
+                    analyzeLocation(lat, lng);
+                    
+                    showMessage('Ubicación actual obtenida correctamente', 'success');
+                }, function(error) {
+                    showMessage('Error al obtener la ubicación: ' + error.message, 'error');
+                });
+            } else {
+                showMessage('Geolocalización no soportada por este navegador', 'error');
+            }
+        }
+
+        function toggleHeatmap() {
+            heatmapVisible = !heatmapVisible;
+            if (heatmapVisible) {
+                // Simular mapa de calor agregando más marcadores con opacidad
+                showMessage('Mapa de calor activado', 'success');
+            } else {
+                showMessage('Mapa de calor desactivado', 'success');
+            }
+        }
+
+        function analyzeRisk() {
+            if (!currentMarker) {
+                showMessage('Por favor, selecciona una ubicación en el mapa', 'error');
+                return;
+            }
+            
+            const lat = parseFloat(document.getElementById('latitud').value);
+            const lng = parseFloat(document.getElementById('longitud').value);
+            
+            // Simular análisis detallado
+            analyzeLocation(lat, lng);
+            showMessage('Análisis de riesgo completado', 'success');
+        }
+
+        function clearMap() {
+            if (currentMarker) {
+                map.removeLayer(currentMarker);
+                currentMarker = null;
+            }
+            document.getElementById('latitud').value = '';
+            document.getElementById('longitud').value = '';
+            
+            // Limpiar indicadores de riesgo
+            document.getElementById('riesgoArea').textContent = '--';
+            document.getElementById('pendiente').textContent = '--°';
+            document.getElementById('estabilidad').textContent = '--';
+            
+            // Resetear colores de las tarjetas
+            document.querySelectorAll('.risk-card').forEach(card => {
+                card.className = 'risk-card';
+            });
+        }
+
+        function showMessage(message, type) {
+            const statusDiv = document.getElementById('status-message');
+            statusDiv.textContent = message;
+            statusDiv.className = `status-message ${type} show`;
+            
+            setTimeout(() => {
+                statusDiv.classList.remove('show');
+            }, 4000);
+        }
+
+        // Manejar selección de archivos
+        document.getElementById('archivos').addEventListener('change', function(e) {
+            const files = e.target.files;
+            const fileInfo = document.getElementById('file-info');
+            
+            if (files.length > 0) {
+                let fileText = `Archivos seleccionados (${files.length}): `;
+                for (let i = 0; i < files.length; i++) {
+                    fileText += files[i].name;
+                    if (i < files.length - 1) fileText += ', ';
+                }
+                fileInfo.textContent = fileText;
+                fileInfo.style.display = 'block';
+            } else {
+                fileInfo.style.display = 'none';
+            }
+        });
+
+        // Manejar envío del formulario
+        document.getElementById('reportForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const reporte = {
+                id: Date.now(),
+                tipoEvento: formData.get('tipoEvento'),
+                magnitud: formData.get('magnitud'),
+                latitud: parseFloat(formData.get('latitud')),
+                longitud: parseFloat(formData.get('longitud')),
+                fechaEvento: formData.get('fechaEvento'),
+                descripcion: formData.get('descripcion'),
+                factorDesencadenante: formData.get('factorDesencadenante'),
+                nivelRiesgo: formData.get('nivelRiesgo'),
+                afectaciones: formData.get('afectaciones'),
+                reportadoPor: formData.get('reportadoPor'),
+                institucion: formData.get('institucion'),
+                fechaReporte: new Date().toISOString(),
+                archivos: formData.getAll('archivos')
+            };
+            
+            // Validar coordenadas
+            if (!reporte.latitud || !reporte.longitud) {
+                showMessage('Por favor, selecciona una ubicación en el mapa', 'error');
+                return;
+            }
+            
+            // Simular envío del reporte
+            reportes.push(reporte);
+            
+            // Añadir marcador del reporte al mapa
+            const riskColor = {
+                'bajo': '#4caf50',
+                'medio': '#ff9800',
+                'alto': '#f44336',
+                'muy_alto': '#d32f2f'
+            };
+            
+            const marker = L.circleMarker([reporte.latitud, reporte.longitud], {
+                color: riskColor[reporte.nivelRiesgo],
+                fillColor: riskColor[reporte.nivelRiesgo],
+                fillOpacity: 0.8,
+                radius: 8,
+                weight: 3
+            }).addTo(map);
+            
+            marker.bindPopup(`
+                <strong>${reporte.tipoEvento.toUpperCase()}</strong><br>
+                <strong>Magnitud:</strong> ${reporte.magnitud}<br>
+                <strong>Riesgo:</strong> ${reporte.nivelRiesgo.toUpperCase()}<br>
+                <strong>Factor:</strong> ${reporte.factorDesencadenante}<br>
+                <strong>Reportado por:</strong> ${reporte.reportadoPor || 'Anónimo'}<br>
+                <strong>Institución:</strong> ${reporte.institucion || 'N/A'}<br>
+                <strong>Fecha:</strong> ${reporte.fechaEvento || 'No especificada'}<br>
+                <em>${reporte.descripcion}</em>
+            `);
+            
+            // Limpiar formulario
+            this.reset();
+            clearMap();
+            document.getElementById('file-info').style.display = 'none';
+            
+            // Establecer fecha actual como predeterminada
+            document.getElementById('fechaEvento').value = new Date().toISOString().slice(0, 16);
+            
+            showMessage('Reporte de evento de remoción en masa enviado exitosamente', 'success');
+            
+            console.log('Reporte enviado:', reporte);
+        });
+
+        // Inicializar cuando se carga la página
+        window.addEventListener('load', function() {
+            initMap();
+            // Establecer fecha actual como predeterminada
+            document.getElementById('fechaEvento').value = new Date().toISOString().slice(0, 16);
+        });
+    </script>
+</body>
+</html>
