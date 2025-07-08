@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Geoportal - Sistema de Reportes</title>
+    <title>Geoportal - Fenómenos de Remoción en Masa</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         * {
             margin: 0;
@@ -14,45 +15,103 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 50%, #2c3e50 100%);
             min-height: 100vh;
             color: #333;
         }
 
         .container {
-            max-width: 1400px;
+            max-width: 1600px;
             margin: 0 auto;
-            padding: 20px;
+            padding: 15px;
         }
 
         .header {
-            background: rgba(255, 255, 255, 0.95);
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
             backdrop-filter: blur(10px);
             border-radius: 15px;
-            padding: 20px;
+            padding: 25px;
             margin-bottom: 20px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 10px 40px rgba(231, 76, 60, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
         }
 
         .header h1 {
-            color: #2c3e50;
-            font-size: 2.5em;
+            font-size: 2.8em;
             margin-bottom: 10px;
             text-align: center;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
 
         .header p {
             text-align: center;
-            color: #7f8c8d;
-            font-size: 1.1em;
+            font-size: 1.2em;
+            opacity: 0.9;
         }
 
-        .main-content {
+        .main-layout {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr 400px;
             gap: 20px;
-            height: 600px;
+            height: 700px;
+        }
+
+        .map-section {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .data-controls {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .data-controls h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .layer-controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+        }
+
+        .layer-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: rgba(52, 73, 94, 0.1);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .layer-toggle:hover {
+            background: rgba(52, 73, 94, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .layer-toggle.active {
+            background: rgba(231, 76, 60, 0.1);
+            border-color: #e74c3c;
+            color: #e74c3c;
+        }
+
+        .layer-toggle input[type="checkbox"] {
+            margin: 0;
         }
 
         .map-container {
@@ -62,18 +121,57 @@
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.2);
+            flex: 1;
         }
 
         .map-container h2 {
             color: #2c3e50;
             margin-bottom: 15px;
             font-size: 1.3em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         #map {
-            height: 500px;
+            height: 520px;
             border-radius: 10px;
             border: 2px solid #e0e0e0;
+        }
+
+        .map-controls {
+            margin-bottom: 15px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .map-btn {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .map-btn:hover {
+            background: linear-gradient(135deg, #2980b9, #1f5582);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .map-btn.danger {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+
+        .map-btn.danger:hover {
+            background: linear-gradient(135deg, #c0392b, #a93226);
         }
 
         .form-container {
@@ -90,49 +188,96 @@
             color: #2c3e50;
             margin-bottom: 20px;
             font-size: 1.3em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 18px;
         }
 
         .form-group label {
             display: block;
-            margin-bottom: 5px;
+            margin-bottom: 6px;
             font-weight: 600;
             color: #34495e;
+            font-size: 14px;
         }
 
         .form-group input,
         .form-group select,
         .form-group textarea {
             width: 100%;
-            padding: 12px;
+            padding: 10px 12px;
             border: 2px solid #e0e0e0;
             border-radius: 8px;
             font-size: 14px;
             transition: all 0.3s ease;
-            background: rgba(255, 255, 255, 0.8);
+            background: rgba(255, 255, 255, 0.9);
         }
 
         .form-group input:focus,
         .form-group select:focus,
         .form-group textarea:focus {
             outline: none;
-            border-color: #3498db;
-            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+            border-color: #e74c3c;
+            box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.1);
             background: rgba(255, 255, 255, 1);
         }
 
         .form-group textarea {
             resize: vertical;
-            min-height: 80px;
+            min-height: 70px;
         }
 
         .coordinates-group {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 15px;
+            gap: 12px;
+        }
+
+        .risk-indicators {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .risk-card {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .risk-card.high {
+            background: linear-gradient(135deg, #ffebee, #ffcdd2);
+            border-color: #f44336;
+        }
+
+        .risk-card.medium {
+            background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+            border-color: #ff9800;
+        }
+
+        .risk-card.low {
+            background: linear-gradient(135deg, #e8f5e8, #c8e6c9);
+            border-color: #4caf50;
+        }
+
+        .risk-card h4 {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .risk-card .value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
         }
 
         .file-input-wrapper {
@@ -151,38 +296,39 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 12px;
-            background: linear-gradient(135deg, #3498db, #2980b9);
+            padding: 10px;
+            background: linear-gradient(135deg, #9b59b6, #8e44ad);
             color: white;
             border-radius: 8px;
             cursor: pointer;
             transition: all 0.3s ease;
             font-weight: 600;
+            font-size: 14px;
         }
 
         .file-input-label:hover {
-            background: linear-gradient(135deg, #2980b9, #1f5582);
+            background: linear-gradient(135deg, #8e44ad, #7d3c98);
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
         }
 
         .file-info {
-            margin-top: 10px;
-            padding: 8px;
+            margin-top: 8px;
+            padding: 6px 8px;
             background: rgba(46, 204, 113, 0.1);
             border-radius: 5px;
             color: #27ae60;
-            font-size: 12px;
+            font-size: 11px;
         }
 
         .btn {
             background: linear-gradient(135deg, #e74c3c, #c0392b);
             color: white;
             border: none;
-            padding: 15px 30px;
+            padding: 14px 25px;
             border-radius: 8px;
             cursor: pointer;
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 600;
             width: 100%;
             transition: all 0.3s ease;
@@ -193,7 +339,7 @@
         .btn:hover {
             background: linear-gradient(135deg, #c0392b, #a93226);
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
         }
 
         .btn:active {
@@ -201,13 +347,14 @@
         }
 
         .status-message {
-            padding: 15px;
+            padding: 12px;
             border-radius: 8px;
-            margin-top: 20px;
+            margin-top: 15px;
             font-weight: 600;
             text-align: center;
             opacity: 0;
             transition: opacity 0.3s ease;
+            font-size: 14px;
         }
 
         .status-message.success {
@@ -224,40 +371,71 @@
             opacity: 1;
         }
 
-        .map-controls {
-            margin-bottom: 15px;
+        .legend {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .legend h4 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .legend-item {
             display: flex;
-            gap: 10px;
-        }
-
-        .map-btn {
-            background: linear-gradient(135deg, #9b59b6, #8e44ad);
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 5px;
-            cursor: pointer;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
             font-size: 12px;
-            transition: all 0.3s ease;
         }
 
-        .map-btn:hover {
-            background: linear-gradient(135deg, #8e44ad, #7d3c98);
-            transform: translateY(-1px);
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: 2px solid #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
 
-        @media (max-width: 768px) {
-            .main-content {
+        @media (max-width: 1024px) {
+            .main-layout {
                 grid-template-columns: 1fr;
                 height: auto;
             }
             
+            .form-container {
+                max-height: 600px;
+            }
+            
             .header h1 {
-                font-size: 2em;
+                font-size: 2.2em;
             }
             
             .coordinates-group {
                 grid-template-columns: 1fr;
+            }
+            
+            .layer-controls {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .risk-indicators {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .map-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .map-btn {
+                justify-content: center;
             }
         }
     </style>
@@ -265,38 +443,120 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🌍 Geoportal de Reportes</h1>
-            <p>Sistema de gestión y carga de reportes geoespaciales</p>
+            <h1><i class="fas fa-mountain"></i> Geoportal - Fenómenos de Remoción en Masa</h1>
+            <p>Sistema de monitoreo, análisis y gestión de deslizamientos y movimientos de ladera</p>
         </div>
 
-        <div class="main-content">
-            <div class="map-container">
-                <h2>📍 Mapa Interactivo</h2>
-                <div class="map-controls">
-                    <button class="map-btn" onclick="getCurrentLocation()">📍 Mi Ubicación</button>
-                    <button class="map-btn" onclick="clearMap()">🗑️ Limpiar</button>
+        <div class="main-layout">
+            <div class="map-section">
+                <div class="data-controls">
+                    <h3><i class="fas fa-layer-group"></i> Capas de Datos Disponibles</h3>
+                    <div class="layer-controls">
+                        <div class="layer-toggle" data-layer="deslizamiento1999_2003">
+                            <input type="checkbox" id="layer1999_2003">
+                            <label for="layer1999_2003">Deslizamientos 1999-2003</label>
+                        </div>
+                        <div class="layer-toggle" data-layer="deslizamiento2003_2010">
+                            <input type="checkbox" id="layer2003_2010">
+                            <label for="layer2003_2010">Deslizamientos 2003-2010</label>
+                        </div>
+                        <div class="layer-toggle" data-layer="deslizamiento2010_2015">
+                            <input type="checkbox" id="layer2010_2015">
+                            <label for="layer2010_2015">Deslizamientos 2010-2015</label>
+                        </div>
+                        <div class="layer-toggle" data-layer="litologia">
+                            <input type="checkbox" id="layerLitologia">
+                            <label for="layerLitologia">Litología</label>
+                        </div>
+                        <div class="layer-toggle" data-layer="urbano_dicf">
+                            <input type="checkbox" id="layerUrbano">
+                            <label for="layerUrbano">Áreas Urbanas</label>
+                        </div>
+                    </div>
                 </div>
-                <div id="map"></div>
+
+                <div class="map-container">
+                    <h2><i class="fas fa-map"></i> Mapa de Análisis Geotécnico</h2>
+                    <div class="map-controls">
+                        <button class="map-btn" onclick="getCurrentLocation()">
+                            <i class="fas fa-crosshairs"></i> Mi Ubicación
+                        </button>
+                        <button class="map-btn" onclick="toggleHeatmap()">
+                            <i class="fas fa-fire"></i> Mapa de Calor
+                        </button>
+                        <button class="map-btn" onclick="analyzeRisk()">
+                            <i class="fas fa-search"></i> Análisis de Riesgo
+                        </button>
+                        <button class="map-btn danger" onclick="clearMap()">
+                            <i class="fas fa-trash"></i> Limpiar
+                        </button>
+                    </div>
+                    <div id="map"></div>
+                </div>
+
+                <div class="legend">
+                    <h4><i class="fas fa-info-circle"></i> Leyenda</h4>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #ff4444;"></div>
+                        <span>Deslizamientos Históricos</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #ffaa00;"></div>
+                        <span>Zonas de Riesgo Alto</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #44ff44;"></div>
+                        <span>Zonas de Riesgo Bajo</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #4444ff;"></div>
+                        <span>Área Urbana</span>
+                    </div>
+                </div>
             </div>
 
             <div class="form-container">
-                <h2>📝 Cargar Nuevo Reporte</h2>
+                <h2><i class="fas fa-exclamation-triangle"></i> Reportar Evento de Remoción</h2>
+                
+                <div class="risk-indicators">
+                    <div class="risk-card high">
+                        <h4>Riesgo Área</h4>
+                        <div class="value" id="riesgoArea">--</div>
+                    </div>
+                    <div class="risk-card medium">
+                        <h4>Pendiente</h4>
+                        <div class="value" id="pendiente">--°</div>
+                    </div>
+                    <div class="risk-card low">
+                        <h4>Estabilidad</h4>
+                        <div class="value" id="estabilidad">--</div>
+                    </div>
+                </div>
+
                 <form id="reportForm">
                     <div class="form-group">
-                        <label for="titulo">Título del Reporte *</label>
-                        <input type="text" id="titulo" name="titulo" required>
+                        <label for="tipoEvento">Tipo de Evento *</label>
+                        <select id="tipoEvento" name="tipoEvento" required>
+                            <option value="">Seleccionar tipo</option>
+                            <option value="deslizamiento">🏔️ Deslizamiento</option>
+                            <option value="derrumbe">⛰️ Derrumbe</option>
+                            <option value="flujo_detritos">🌊 Flujo de Detritos</option>
+                            <option value="caida_rocas">🪨 Caída de Rocas</option>
+                            <option value="erosion">🌀 Erosión</option>
+                            <option value="reptacion">🐌 Reptación</option>
+                            <option value="hundimiento">🕳️ Hundimiento</option>
+                        </select>
                     </div>
 
                     <div class="form-group">
-                        <label for="tipo">Tipo de Reporte *</label>
-                        <select id="tipo" name="tipo" required>
-                            <option value="">Seleccionar tipo</option>
-                            <option value="incidente">🚨 Incidente</option>
-                            <option value="observacion">👁️ Observación</option>
-                            <option value="mantenimiento">🔧 Mantenimiento</option>
-                            <option value="ambiental">🌱 Ambiental</option>
-                            <option value="seguridad">🛡️ Seguridad</option>
-                            <option value="otro">📋 Otro</option>
+                        <label for="magnitud">Magnitud del Evento *</label>
+                        <select id="magnitud" name="magnitud" required>
+                            <option value="">Seleccionar magnitud</option>
+                            <option value="muy_pequeno">Muy Pequeño (&lt;100 m³)</option>
+                            <option value="pequeno">Pequeño (100-1000 m³)</option>
+                            <option value="mediano">Mediano (1000-10000 m³)</option>
+                            <option value="grande">Grande (10000-100000 m³)</option>
+                            <option value="muy_grande">Muy Grande (&gt;100000 m³)</option>
                         </select>
                     </div>
 
@@ -312,37 +572,67 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="descripcion">Descripción *</label>
-                        <textarea id="descripcion" name="descripcion" rows="4" required placeholder="Describe detalladamente el reporte..."></textarea>
+                        <label for="fechaEvento">Fecha del Evento</label>
+                        <input type="datetime-local" id="fechaEvento" name="fechaEvento">
                     </div>
 
                     <div class="form-group">
-                        <label for="prioridad">Prioridad</label>
-                        <select id="prioridad" name="prioridad">
-                            <option value="baja">🟢 Baja</option>
-                            <option value="media" selected>🟡 Media</option>
-                            <option value="alta">🔴 Alta</option>
-                            <option value="critica">🆘 Crítica</option>
+                        <label for="descripcion">Descripción del Evento *</label>
+                        <textarea id="descripcion" name="descripcion" rows="3" required placeholder="Describe las características del evento, daños, causas aparentes..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="factorDesencadenante">Factor Desencadenante</label>
+                        <select id="factorDesencadenante" name="factorDesencadenante">
+                            <option value="">Seleccionar factor</option>
+                            <option value="precipitacion">🌧️ Precipitación Intensa</option>
+                            <option value="sismo">🌍 Actividad Sísmica</option>
+                            <option value="antropico">👥 Actividad Humana</option>
+                            <option value="erosion_fluvial">🏞️ Erosión Fluvial</option>
+                            <option value="volcanico">🌋 Actividad Volcánica</option>
+                            <option value="desconocido">❓ Desconocido</option>
                         </select>
                     </div>
 
                     <div class="form-group">
-                        <label for="reportado_por">Reportado por</label>
-                        <input type="text" id="reportado_por" name="reportado_por" placeholder="Nombre del reportante">
+                        <label for="nivelRiesgo">Nivel de Riesgo *</label>
+                        <select id="nivelRiesgo" name="nivelRiesgo" required>
+                            <option value="bajo">🟢 Bajo</option>
+                            <option value="medio" selected>🟡 Medio</option>
+                            <option value="alto">🔴 Alto</option>
+                            <option value="muy_alto">🆘 Muy Alto</option>
+                        </select>
                     </div>
 
                     <div class="form-group">
-                        <label>Archivos adjuntos (imágenes, documentos)</label>
+                        <label for="afectaciones">Afectaciones</label>
+                        <textarea id="afectaciones" name="afectaciones" rows="2" placeholder="Viviendas afectadas, vías interrumpidas, servicios públicos..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="reportadoPor">Reportado por</label>
+                        <input type="text" id="reportadoPor" name="reportadoPor" placeholder="Nombre del técnico/inspector">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="institucion">Institución</label>
+                        <input type="text" id="institucion" name="institucion" placeholder="Entidad que reporta">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Archivos técnicos (fotos, informes, análisis)</label>
                         <div class="file-input-wrapper">
-                            <input type="file" id="archivos" name="archivos" multiple accept=".jpg,.jpeg,.png,.pdf,.doc,.docx">
+                            <input type="file" id="archivos" name="archivos" multiple accept=".jpg,.jpeg,.png,.pdf,.doc,.docx,.dwg">
                             <label for="archivos" class="file-input-label">
-                                📎 Seleccionar Archivos
+                                <i class="fas fa-upload"></i> Seleccionar Archivos
                             </label>
                         </div>
                         <div id="file-info" class="file-info" style="display: none;"></div>
                     </div>
 
-                    <button type="submit" class="btn">🚀 Enviar Reporte</button>
+                    <button type="submit" class="btn">
+                        <i class="fas fa-paper-plane"></i> Enviar Reporte
+                    </button>
 
                     <div id="status-message" class="status-message"></div>
                 </form>
@@ -355,143 +645,124 @@
         let map;
         let currentMarker;
         let reportes = [];
+        let layerGroups = {};
+        let heatmapVisible = false;
 
-        // Inicializar el mapa
+        // Datos simulados para las capas
+        const datosCapas = {
+            deslizamiento1999_2003: generateRandomSlides(50, '1999-2003'),
+            deslizamiento2003_2010: generateRandomSlides(40, '2003-2010'),
+            deslizamiento2010_2015: generateRandomSlides(35, '2010-2015'),
+            litologia: generateLitologyData(),
+            urbano_dicf: generateUrbanAreas()
+        };
+
+        function generateRandomSlides(count, period) {
+            const slides = [];
+            for (let i = 0; i < count; i++) {
+                slides.push({
+                    lat: -4.0 + (Math.random() - 0.5) * 0.1,
+                    lng: -79.2 + (Math.random() - 0.5) * 0.1,
+                    tipo: ['deslizamiento', 'derrumbe', 'flujo_detritos'][Math.floor(Math.random() * 3)],
+                    magnitud: ['pequeño', 'mediano', 'grande'][Math.floor(Math.random() * 3)],
+                    periodo: period,
+                    fecha: generateRandomDate(period)
+                });
+            }
+            return slides;
+        }
+
+        function generateRandomDate(period) {
+            const [start, end] = period.split('-');
+            const startYear = parseInt(start);
+            const endYear = parseInt(end);
+            const year = startYear + Math.floor(Math.random() * (endYear - startYear + 1));
+            const month = Math.floor(Math.random() * 12) + 1;
+            const day = Math.floor(Math.random() * 28) + 1;
+            return `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+        }
+
+        function generateLitologyData() {
+            return [
+                { lat: -4.02, lng: -79.22, tipo: 'Arenisca', resistencia: 'Media' },
+                { lat: -3.98, lng: -79.18, tipo: 'Lutita', resistencia: 'Baja' },
+                { lat: -4.01, lng: -79.21, tipo: 'Conglomerado', resistencia: 'Alta' }
+            ];
+        }
+
+        function generateUrbanAreas() {
+            return [
+                { lat: -4.0, lng: -79.2, nombre: 'Centro Zamora', poblacion: 15000 },
+                { lat: -3.99, lng: -79.19, nombre: 'Barrio Norte', poblacion: 8000 }
+            ];
+        }
+
         function initMap() {
-            map = L.map('map').setView([-4.0, -79.2], 13); // Coordenadas de Zamora, Ecuador
+            map = L.map('map').setView([-4.0, -79.2], 13);
             
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© OpenStreetMap contributors'
             }).addTo(map);
 
+            // Inicializar grupos de capas
+            Object.keys(datosCapas).forEach(layerName => {
+                layerGroups[layerName] = L.layerGroup();
+            });
+
             // Eventos del mapa
             map.on('click', function(e) {
                 addMarker(e.latlng.lat, e.latlng.lng);
+                analyzeLocation(e.latlng.lat, e.latlng.lng);
+            });
+
+            // Configurar controles de capas
+            setupLayerControls();
+        }
+
+        function setupLayerControls() {
+            document.querySelectorAll('.layer-toggle').forEach(toggle => {
+                const checkbox = toggle.querySelector('input[type="checkbox"]');
+                const layerName = toggle.dataset.layer;
+                
+                checkbox.addEventListener('change', function() {
+                    if (this.checked) {
+                        loadLayer(layerName);
+                        toggle.classList.add('active');
+                    } else {
+                        unloadLayer(layerName);
+                        toggle.classList.remove('active');
+                    }
+                });
             });
         }
 
-        // Añadir marcador al mapa
-        function addMarker(lat, lng) {
-            if (currentMarker) {
-                map.removeLayer(currentMarker);
-            }
-            
-            currentMarker = L.marker([lat, lng]).addTo(map);
-            
-            // Actualizar campos de coordenadas
-            document.getElementById('latitud').value = lat.toFixed(6);
-            document.getElementById('longitud').value = lng.toFixed(6);
-        }
+        function loadLayer(layerName) {
+            const data = datosCapas[layerName];
+            layerGroups[layerName].clearLayers();
 
-        // Obtener ubicación actual
-        function getCurrentLocation() {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(function(position) {
-                    const lat = position.coords.latitude;
-                    const lng = position.coords.longitude;
-                    
-                    map.setView([lat, lng], 15);
-                    addMarker(lat, lng);
-                    
-                    showMessage('Ubicación actual obtenida correctamente', 'success');
-                }, function(error) {
-                    showMessage('Error al obtener la ubicación: ' + error.message, 'error');
-                });
-            } else {
-                showMessage('Geolocalización no soportada por este navegador', 'error');
-            }
-        }
-
-        // Limpiar mapa
-        function clearMap() {
-            if (currentMarker) {
-                map.removeLayer(currentMarker);
-                currentMarker = null;
-            }
-            document.getElementById('latitud').value = '';
-            document.getElementById('longitud').value = '';
-        }
-
-        // Mostrar mensaje de estado
-        function showMessage(message, type) {
-            const statusDiv = document.getElementById('status-message');
-            statusDiv.textContent = message;
-            statusDiv.className = `status-message ${type} show`;
-            
-            setTimeout(() => {
-                statusDiv.classList.remove('show');
-            }, 3000);
-        }
-
-        // Manejar selección de archivos
-        document.getElementById('archivos').addEventListener('change', function(e) {
-            const files = e.target.files;
-            const fileInfo = document.getElementById('file-info');
-            
-            if (files.length > 0) {
-                let fileText = `Archivos seleccionados (${files.length}): `;
-                for (let i = 0; i < files.length; i++) {
-                    fileText += files[i].name;
-                    if (i < files.length - 1) fileText += ', ';
+            data.forEach(item => {
+                let marker;
+                let color = '#ff4444';
+                
+                switch(layerName) {
+                    case 'deslizamiento1999_2003':
+                        color = '#ff6b6b';
+                        break;
+                    case 'deslizamiento2003_2010':
+                        color = '#ffa500';
+                        break;
+                    case 'deslizamiento2010_2015':
+                        color = '#ff4444';
+                        break;
+                    case 'litologia':
+                        color = '#8e44ad';
+                        break;
+                    case 'urbano_dicf':
+                        color = '#3498db';
+                        break;
                 }
-                fileInfo.textContent = fileText;
-                fileInfo.style.display = 'block';
-            } else {
-                fileInfo.style.display = 'none';
-            }
-        });
 
-        // Manejar envío del formulario
-        document.getElementById('reportForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const formData = new FormData(this);
-            const reporte = {
-                id: Date.now(),
-                titulo: formData.get('titulo'),
-                tipo: formData.get('tipo'),
-                latitud: parseFloat(formData.get('latitud')),
-                longitud: parseFloat(formData.get('longitud')),
-                descripcion: formData.get('descripcion'),
-                prioridad: formData.get('prioridad'),
-                reportado_por: formData.get('reportado_por'),
-                fecha: new Date().toISOString(),
-                archivos: formData.getAll('archivos')
-            };
-            
-            // Validar coordenadas
-            if (!reporte.latitud || !reporte.longitud) {
-                showMessage('Por favor, selecciona una ubicación en el mapa', 'error');
-                return;
-            }
-            
-            // Simular envío del reporte
-            reportes.push(reporte);
-            
-            // Añadir marcador permanente al mapa
-            const marker = L.marker([reporte.latitud, reporte.longitud]).addTo(map);
-            marker.bindPopup(`
-                <strong>${reporte.titulo}</strong><br>
-                Tipo: ${reporte.tipo}<br>
-                Prioridad: ${reporte.prioridad}<br>
-                Reportado por: ${reporte.reportado_por || 'Anónimo'}<br>
-                <em>${reporte.descripcion}</em>
-            `);
-            
-            // Limpiar formulario
-            this.reset();
-            clearMap();
-            document.getElementById('file-info').style.display = 'none';
-            
-            showMessage('Reporte enviado exitosamente', 'success');
-            
-            console.log('Reporte enviado:', reporte);
-        });
-
-        // Inicializar cuando se carga la página
-        window.addEventListener('load', function() {
-            initMap();
-        });
-    </script>
-</body>
-</html>
+                marker = L.circleMarker([item.lat, item.lng], {
+                    color: color,
+                    fillColor: color,
+                    fillOpacity:
