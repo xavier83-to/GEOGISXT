@@ -1,651 +1,855 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Geoportal - Fenómenos de Remoción en Masa</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Geoportal UTPL - Riesgos Geológicos y Monitoreo de Fenómenos de Remoción en Masa</title>
+  
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
+  
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+    }
+    
+    .header {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 15px 20px;
+      box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+    }
+    
+    .header-content {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    .logo-section {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    
+    .logo {
+      width: 50px;
+      height: 50px;
+      background: linear-gradient(45deg, #e74c3c, #c0392b);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      color: white;
+      font-weight: bold;
+    }
+    
+    .title-section h1 {
+      font-size: 1.8em;
+      color: #2c3e50;
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+    
+    .title-section p {
+      font-size: 0.9em;
+      color: #7f8c8d;
+      font-weight: 500;
+    }
+    
+    .header-actions {
+      display: flex;
+      gap: 15px;
+      align-items: center;
+    }
+    
+    .institution-badge {
+      background: linear-gradient(45deg, #3498db, #2980b9);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 0.9em;
+      font-weight: 600;
+      box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+    }
+    
+    .btn-report {
+      background: linear-gradient(45deg, #e74c3c, #c0392b);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 25px;
+      font-size: 0.9em;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+    }
+    
+    .btn-report:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
+    }
+    
+    .container {
+      display: flex;
+      height: calc(100vh - 80px);
+      gap: 20px;
+      padding: 20px;
+    }
+    
+    .sidebar {
+      width: 350px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      padding: 25px;
+      overflow-y: auto;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .sidebar h2 {
+      font-size: 1.4em;
+      margin-bottom: 20px;
+      color: #2c3e50;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .section {
+      margin-bottom: 25px;
+    }
+    
+    .section h3 {
+      font-size: 1.1em;
+      color: #34495e;
+      margin-bottom: 15px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .layer-item {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 18px;
+      margin-bottom: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border: 2px solid transparent;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .layer-item::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #e74c3c, #f39c12);
+      transform: scaleX(0);
+      transition: transform 0.3s ease;
+    }
+    
+    .layer-item:hover::before {
+      transform: scaleX(1);
+    }
+    
+    .layer-item:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+      border-color: #3498db;
+    }
+    
+    .layer-item.active {
+      background: linear-gradient(135deg, #27ae60, #2ecc71);
+      color: white;
+      border-color: #27ae60;
+      transform: translateY(-2px);
+    }
+    
+    .layer-item.active::before {
+      transform: scaleX(1);
+      background: rgba(255, 255, 255, 0.3);
+    }
+    
+    .layer-item h4 {
+      font-size: 1.05em;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+    
+    .layer-item p {
+      font-size: 0.85em;
+      opacity: 0.8;
+      margin-bottom: 8px;
+      line-height: 1.4;
+    }
+    
+    .layer-item.active p {
+      opacity: 0.9;
+    }
+    
+    .geometry-type {
+      background: rgba(231, 76, 60, 0.1);
+      color: #e74c3c;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.75em;
+      font-weight: 600;
+      display: inline-block;
+    }
+    
+    .layer-item.active .geometry-type {
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+    }
+    
+    .info-panel {
+      background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 20px;
+      border-left: 4px solid #3498db;
+    }
+    
+    .info-panel h3 {
+      color: #2c3e50;
+      margin-bottom: 12px;
+      font-size: 1.1em;
+    }
+    
+    .info-panel p {
+      color: #5a6c7d;
+      font-size: 0.9em;
+      line-height: 1.5;
+    }
+    
+    .map-container {
+      flex: 1;
+      position: relative;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+    
+    #map {
+      width: 100%;
+      height: 100%;
+    }
+    
+    .loading {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      z-index: 1000;
+      display: none;
+      text-align: center;
+    }
+    
+    .loading.show {
+      display: block;
+    }
+    
+    .loading h3 {
+      color: #2c3e50;
+      margin-bottom: 10px;
+      font-size: 1.2em;
+    }
+    
+    .loading p {
+      color: #7f8c8d;
+      font-size: 0.9em;
+    }
+    
+    .error {
+      background: linear-gradient(135deg, #e74c3c, #c0392b);
+      color: white;
+      padding: 15px;
+      border-radius: 8px;
+      margin: 15px 0;
+      display: none;
+      font-weight: 500;
+    }
+    
+    .error.show {
+      display: block;
+    }
+    
+    .legend {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 20px;
+      border-radius: 12px;
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      z-index: 1000;
+      min-width: 280px;
+      max-height: 70vh;
+      overflow-y: auto;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .legend h4 {
+      margin-bottom: 15px;
+      color: #2c3e50;
+      font-size: 1.1em;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .legend-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 8px;
+      padding: 4px 0;
+    }
+    
+    .legend-color {
+      width: 18px;
+      height: 18px;
+      margin-right: 12px;
+      border-radius: 4px;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      flex-shrink: 0;
+    }
+    
+    .legend-item span {
+      font-size: 0.85em;
+      color: #2c3e50;
+      font-weight: 500;
+    }
+    
+    .legend-section {
+      margin-bottom: 20px;
+    }
+    
+    .legend-section:last-child {
+      margin-bottom: 0;
+    }
+    
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    
+    .stat-card {
+      background: white;
+      border-radius: 10px;
+      padding: 15px;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      border: 1px solid rgba(0, 0, 0, 0.05);
+    }
+    
+    .stat-number {
+      font-size: 1.8em;
+      font-weight: 700;
+      color: #e74c3c;
+      display: block;
+    }
+    
+    .stat-label {
+      font-size: 0.8em;
+      color: #7f8c8d;
+      margin-top: 5px;
+      font-weight: 500;
+    }
+    
+    .footer-info {
+      background: rgba(44, 62, 80, 0.1);
+      border-radius: 8px;
+      padding: 15px;
+      margin-top: 20px;
+      font-size: 0.8em;
+      color: #5a6c7d;
+      text-align: center;
+    }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #2c3e50 0%, #34495e 50%, #2c3e50 100%);
-            min-height: 100vh;
-            color: #333;
-        }
+    /* Modal styles */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 2000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.5);
+      backdrop-filter: blur(5px);
+    }
 
-        .container {
-            max-width: 1600px;
-            margin: 0 auto;
-            padding: 15px;
-        }
+    .modal.show {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
 
-        .header {
-            background: linear-gradient(135deg, #e74c3c, #c0392b);
-            backdrop-filter: blur(10px);
-            border-radius: 15px;
-            padding: 25px;
-            margin-bottom: 20px;
-            box-shadow: 0 10px 40px rgba(231, 76, 60, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: white;
-        }
+    .modal-content {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+      padding: 40px;
+      max-width: 600px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      position: relative;
+    }
 
-        .header h1 {
-            font-size: 2.8em;
-            margin-bottom: 10px;
-            text-align: center;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        }
+    .close {
+      position: absolute;
+      right: 20px;
+      top: 20px;
+      font-size: 30px;
+      font-weight: bold;
+      cursor: pointer;
+      color: #aaa;
+      transition: color 0.3s ease;
+    }
 
-        .header p {
-            text-align: center;
-            font-size: 1.2em;
-            opacity: 0.9;
-        }
+    .close:hover {
+      color: #e74c3c;
+    }
 
-        .main-layout {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 20px;
-            height: 700px;
-        }
+    .modal h1 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 30px;
+      font-size: 2.2em;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
 
-        .map-section {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
+    .form-group {
+      margin-bottom: 25px;
+    }
 
-        .data-controls {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 12px;
-            padding: 15px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      color: #555;
+      font-weight: 600;
+      font-size: 1.1em;
+    }
 
-        .data-controls h3 {
-            color: #2c3e50;
-            margin-bottom: 15px;
-            font-size: 1.1em;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+    .form-group input, 
+    .form-group select, 
+    .form-group textarea {
+      width: 100%;
+      padding: 15px;
+      border: 2px solid #e1e5e9;
+      border-radius: 12px;
+      font-size: 16px;
+      transition: all 0.3s ease;
+      background: #f8f9fa;
+    }
 
-        .layer-controls {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 10px;
-        }
+    .form-group input:focus, 
+    .form-group select:focus, 
+    .form-group textarea:focus {
+      outline: none;
+      border-color: #667eea;
+      background: white;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      transform: translateY(-2px);
+    }
 
-        .layer-toggle {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 12px;
-            background: rgba(52, 73, 94, 0.1);
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border: 2px solid transparent;
-        }
+    .coordinates-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+    }
 
-        .layer-toggle:hover {
-            background: rgba(52, 73, 94, 0.2);
-            transform: translateY(-2px);
-        }
+    .btn-group {
+      display: flex;
+      gap: 15px;
+      margin-top: 30px;
+    }
 
-        .layer-toggle.active {
-            background: rgba(231, 76, 60, 0.1);
-            border-color: #e74c3c;
-            color: #e74c3c;
-        }
+    .btn-group button {
+      flex: 1;
+      padding: 15px 30px;
+      border: none;
+      border-radius: 12px;
+      font-size: 1.1em;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
 
-        .layer-toggle input[type="checkbox"] {
-            margin: 0;
-        }
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+    }
 
-        .map-container {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 15px;
-            padding: 20px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            flex: 1;
-        }
+    .btn-primary:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+    }
 
-        .map-container h2 {
-            color: #2c3e50;
-            margin-bottom: 15px;
-            font-size: 1.3em;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+    .btn-secondary {
+      background: #f8f9fa;
+      color: #666;
+      border: 2px solid #e1e5e9;
+    }
 
-        #map {
-            height: 520px;
-            border-radius: 10px;
-            border: 2px solid #e0e0e0;
-        }
+    .btn-secondary:hover {
+      background: #e9ecef;
+      transform: translateY(-2px);
+    }
 
-        .status-message {
-            padding: 12px;
-            border-radius: 8px;
-            margin-top: 15px;
-            font-weight: 600;
-            text-align: center;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            font-size: 14px;
-        }
+    .alert {
+      padding: 15px;
+      border-radius: 12px;
+      margin: 20px 0;
+      font-weight: 600;
+      display: none;
+    }
 
-        .status-message.success {
-            background: linear-gradient(135deg, #2ecc71, #27ae60);
-            color: white;
-        }
+    .alert-success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
 
-        .status-message.error {
-            background: linear-gradient(135deg, #e74c3c, #c0392b);
-            color: white;
-        }
+    .alert-error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
 
-        .status-message.show {
-            opacity: 1;
-        }
+    .modal-loading {
+      display: none;
+      text-align: center;
+      padding: 20px;
+    }
 
-        .legend {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 10px;
-            padding: 15px;
-            margin-top: 15px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-        }
+    .spinner {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #667eea;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 10px;
+    }
 
-        .legend h4 {
-            color: #2c3e50;
-            margin-bottom: 10px;
-            font-size: 14px;
-        }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
 
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 6px;
-            font-size: 12px;
-        }
+    .location-btn {
+      background: linear-gradient(135deg, #28a745, #20c997);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      margin-top: 10px;
+      cursor: pointer;
+      font-size: 0.9em;
+      transition: all 0.3s ease;
+      width: 100%;
+    }
 
-        .legend-color {
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            border: 2px solid #fff;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        }
+    .location-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
+    }
+    
+    @media (max-width: 1200px) {
+      .sidebar {
+        width: 320px;
+      }
+      
+      .header-content {
+        flex-direction: column;
+        gap: 15px;
+      }
+      
+      .title-section h1 {
+        font-size: 1.5em;
+      }
+    }
+    
+    @media (max-width: 768px) {
+      .container {
+        flex-direction: column;
+        height: auto;
+        min-height: calc(100vh - 120px);
+      }
+      
+      .sidebar {
+        width: 100%;
+        order: 2;
+        max-height: 400px;
+      }
+      
+      .map-container {
+        order: 1;
+        height: 50vh;
+      }
+      
+      .legend {
+        position: relative;
+        bottom: auto;
+        right: auto;
+        margin-top: 20px;
+      }
 
-        .info-panel {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 12px;
-            padding: 20px;
-            margin-top: 15px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
+      .modal-content {
+        margin: 10px;
+        padding: 20px;
+      }
 
-        .info-panel h3 {
-            color: #2c3e50;
-            margin-bottom: 15px;
-            font-size: 1.2em;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
-            margin-top: 15px;
-        }
-
-        .stat-card {
-            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-            border-radius: 8px;
-            padding: 15px;
-            text-align: center;
-            border: 2px solid transparent;
-            transition: all 0.3s ease;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-
-        .stat-card.danger {
-            background: linear-gradient(135deg, #ffebee, #ffcdd2);
-            border-color: #f44336;
-        }
-
-        .stat-card.warning {
-            background: linear-gradient(135deg, #fff3e0, #ffe0b2);
-            border-color: #ff9800;
-        }
-
-        .stat-card.success {
-            background: linear-gradient(135deg, #e8f5e8, #c8e6c9);
-            border-color: #4caf50;
-        }
-
-        .stat-card h4 {
-            font-size: 12px;
-            color: #666;
-            margin-bottom: 8px;
-            text-transform: uppercase;
-        }
-
-        .stat-card .value {
-            font-size: 24px;
-            font-weight: bold;
-            color: #333;
-        }
-
-        @media (max-width: 1024px) {
-            .header h1 {
-                font-size: 2.2em;
-            }
-            
-            .layer-controls {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-    </style>
+      .coordinates-group {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1><i class="fas fa-mountain"></i> Geoportal - Fenómenos de Remoción en Masa</h1>
-            <p>Sistema de monitoreo, análisis y visualización de deslizamientos y movimientos de ladera</p>
+  <div class="header">
+    <div class="header-content">
+      <div class="logo-section">
+        <div class="logo">⚠️</div>
+        <div class="title-section">
+          <h1>Geoportal de Riesgos Geológicos</h1>
+          <p>Monitoreo de Fenómenos de Remoción en Masa</p>
         </div>
-
-        <div class="main-layout">
-            <div class="map-section">
-                <div class="data-controls">
-                    <h3><i class="fas fa-layer-group"></i> Capas de Datos Disponibles</h3>
-                    <div class="layer-controls">
-                        <div class="layer-toggle" data-layer="deslizamiento1999_2003">
-                            <input type="checkbox" id="layer1999_2003">
-                            <label for="layer1999_2003">Deslizamientos 1999-2003</label>
-                        </div>
-                        <div class="layer-toggle" data-layer="deslizamiento2003_2010">
-                            <input type="checkbox" id="layer2003_2010">
-                            <label for="layer2003_2010">Deslizamientos 2003-2010</label>
-                        </div>
-                        <div class="layer-toggle" data-layer="deslizamiento2010_2015">
-                            <input type="checkbox" id="layer2010_2015">
-                            <label for="layer2010_2015">Deslizamientos 2010-2015</label>
-                        </div>
-                        <div class="layer-toggle" data-layer="litologia">
-                            <input type="checkbox" id="layerLitologia">
-                            <label for="layerLitologia">Litología</label>
-                        </div>
-                        <div class="layer-toggle" data-layer="urbano_dicf">
-                            <input type="checkbox" id="layerUrbano">
-                            <label for="layerUrbano">Áreas Urbanas</label>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="map-container">
-                    <div id="map"></div>
-                    <div id="status-message" class="status-message"></div>
-                </div>
-
-                <div class="legend">
-                    <h4><i class="fas fa-info-circle"></i> Leyenda</h4>
-                    <div class="legend-item">
-                        <div class="legend-color" style="background-color: #ff4444;"></div>
-                        <span>Deslizamientos Históricos</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-color" style="background-color: #ffaa00;"></div>
-                        <span>Zonas de Riesgo Alto</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-color" style="background-color: #44ff44;"></div>
-                        <span>Zonas de Riesgo Bajo</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-color" style="background-color: #4444ff;"></div>
-                        <span>Área Urbana</span>
-                    </div>
-                </div>
-
-                <div class="info-panel">
-                    <h3><i class="fas fa-chart-bar"></i> Estadísticas del Área</h3>
-                    <div class="stats-grid">
-                        <div class="stat-card danger">
-                            <h4>Eventos Históricos</h4>
-                            <div class="value" id="eventosHistoricos">125</div>
-                        </div>
-                        <div class="stat-card warning">
-                            <h4>Zonas de Riesgo</h4>
-                            <div class="value" id="zonasRiesgo">42</div>
-                        </div>
-                        <div class="stat-card success">
-                            <h4>Área Monitoreada</h4>
-                            <div class="value" id="areaMonitoreada">85%</div>
-                        </div>
-                        <div class="stat-card">
-                            <h4>Última Actualización</h4>
-                            <div class="value" id="ultimaActualizacion" style="font-size: 14px;">Jul 2025</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+      </div>
+      <div class="header-actions">
+        <button class="btn-report" onclick="abrirModalReporte()">
+          📋 Reportar Evento
+        </button>
+        <div class="institution-badge">
+          UTPL - GAD
         </div>
+      </div>
     </div>
+  </div>
+  
+  <div class="container">
+    <div class="sidebar">
+      <h2>🗺️ Capas Temáticas</h2>
+      
+      <div class="stats-grid">
+        <div class="stat-card">
+          <span class="stat-number">5</span>
+          <div class="stat-label">Capas Disponibles</div>
+        </div>
+        <div class="stat-card">
+          <span class="stat-number">3</span>
+          <div class="stat-label">Períodos Análisis</div>
+        </div>
+      </div>
+      
+      <div class="section">
+        <h3>🔍 Inventario de Deslizamientos</h3>
+        
+        <div class="layer-item" data-table="deslizamiento1999_2003" onclick="toggleLayer(this)">
+          <h4>Deslizamientos 1999-2003</h4>
+          <p>Polígonos de movimientos en masa identificados en el período 1999-2003</p>
+          <span class="geometry-type">MULTIPOLYGON</span>
+        </div>
+        
+        <div class="layer-item" data-table="deslizamiento2003_2010" onclick="toggleLayer(this)">
+          <h4>Deslizamientos 2003-2010</h4>
+          <p>Polígonos de movimientos en masa identificados en el período 2003-2010</p>
+          <span class="geometry-type">MULTIPOLYGON</span>
+        </div>
+        
+        <div class="layer-item" data-table="deslizamiento2010_2015" onclick="toggleLayer(this)">
+          <h4>Deslizamientos 2010-2015</h4>
+          <p>Polígonos de movimientos en masa identificados en el período 2010-2015</p>
+          <span class="geometry-type">MULTIPOLYGON</span>
+        </div>
+      </div>
+      
+      <div class="section">
+        <h3>🌍 Información Geológica</h3>
+        
+        <div class="layer-item" data-table="litologia" onclick="toggleLayer(this)">
+          <h4>Litología</h4>
+          <p>Formaciones geológicas y características litológicas del área de estudio</p>
+          <span class="geometry-type">MULTIPOLYGON</span>
+        </div>
+        
+        <div class="layer-item" data-table="urbano_dicf" onclick="toggleLayer(this)">
+          <h4>Infraestructura Urbana</h4>
+          <p>Elementos urbanos lineales para análisis de exposición al riesgo</p>
+          <span class="geometry-type">MULTILINESTRING</span>
+        </div>
+      </div>
+      
+      <div class="info-panel">
+        <h3>📊 Propósito de la Plataforma</h3>
+        <p>Esta plataforma digital integrada consolida inventarios, mapas temáticos e indicadores de susceptibilidad para facilitar la toma de decisiones en gestión territorial y ordenamiento urbano en contextos de riesgo geodinámico.</p>
+      </div>
+      
+      <div class="footer-info">
+        <strong>Universidad Técnica Particular de Loja (UTPL)</strong><br>
+        En cooperación con Gobiernos Autónomos Descentralizados (GAD)<br>
+        Gestión del Riesgo y Planificación Territorial
+      </div>
+      
+      <div class="error" id="error"></div>
+    </div>
+    
+    <div class="map-container">
+      <div class="loading" id="loading">
+        <h3>⏳ Cargando Datos Geoespaciales</h3>
+        <p>Procesando información de susceptibilidad geodinámica...</p>
+      </div>
+      
+      <div id="map"></div>
+      
+      <div class="legend">
+        <div class="legend-section">
+          <h4>📈 Fenómenos de Remoción en Masa</h4>
+          <div class="legend-item">
+            <div class="legend-color" style="background-color: #e74c3c;"></div>
+            <span>Deslizamientos 1999-2003</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color" style="background-color: #f39c12;"></div>
+            <span>Deslizamientos 2003-2010</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color" style="background-color: #e67e22;"></div>
+            <span>Deslizamientos 2010-2015</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color" style="background-color: #3498db;"></div>
+            <span>Infraestructura Urbana</span>
+          </div>
+        </div>
+        
+        <div class="legend-section">
+          <h4>🗿 Formaciones Litológicas</h4>
+          <div class="legend-item">
+            <div class="legend-color" style="background-color: #8B4513;"></div>
+            <span>F. Belén (arenas, silts, conglomerado)</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color" style="background-color: #CD853F;"></div>
+            <span>F. San Cayetano</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color" style="background-color: #DEB887;"></div>
+            <span>F. San Cayetano (arenas, arenisca)</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color" style="background-color: #F0E68C;"></div>
+            <span>F. San Cayetano (calizas, dolomitas, chert)</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color" style="background-color: #228B22;"></div>
+            <span>F. Trigal</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color" style="background-color: #87CEEB;"></div>
+            <span>Depósitos Aluviales</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color" style="background-color: #FF6347;"></div>
+            <span>F. Tres Lagunas (granitoide)</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color" style="background-color: #A0522D;"></div>
+            <span>F. Belén (arcillas rojas y grises)</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color" style="background-color: #B22222;"></div>
+            <span>F. Belén (conglomerados y arenas rojas)</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color" style="background-color: #9932CC;"></div>
+            <span>F. Chigüinda</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
-    <script>
-        let map;
-        let currentMarker;
-        let layerGroups = {};
+  <!-- Modal del formulario de reporte -->
+  <div id="reportModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="cerrarModalReporte()">&times;</span>
+      
+      <h1>📍 Reporte de Eventos</h1>
+      
+      <div class="modal-loading" id="modalLoading">
+        <div class="spinner"></div>
+        <p>Enviando reporte y notificaciones...</p>
+      </div>
 
-        // Datos simulados para las capas
-        const datosCapas = {
-            deslizamiento1999_2003: generateRandomSlides(50, '1999-2003'),
-            deslizamiento2003_2010: generateRandomSlides(40, '2003-2010'),
-            deslizamiento2010_2015: generateRandomSlides(35, '2010-2015'),
-            litologia: generateLitologyData(),
-            urbano_dicf: generateUrbanAreas()
-        };
+      <div class="alert alert-success" id="successAlert">
+        ✅ Reporte enviado exitosamente y notificaciones enviadas
+      </div>
 
-        function generateRandomSlides(count, period) {
-            const slides = [];
-            for (let i = 0; i < count; i++) {
-                const centerLat = -4.0 + (Math.random() - 0.5) * 0.1;
-                const centerLng = -79.2 + (Math.random() - 0.5) * 0.1;
-                
-                // Generar polígono irregular alrededor del punto central
-                const polygon = generatePolygon(centerLat, centerLng, 0.002);
-                
-                slides.push({
-                    coordinates: polygon,
-                    tipo: ['deslizamiento', 'derrumbe', 'flujo_detritos'][Math.floor(Math.random() * 3)],
-                    magnitud: ['pequeño', 'mediano', 'grande'][Math.floor(Math.random() * 3)],
-                    periodo: period,
-                    fecha: generateRandomDate(period)
-                });
-            }
-            return slides;
-        }
+      <div class="alert alert-error" id="errorAlert">
+        ❌ Error al enviar el reporte. Por favor, intenta nuevamente.
+      </div>
 
-        function generateRandomDate(period) {
-            const [start, end] = period.split('-');
-            const startYear = parseInt(start);
-            const endYear = parseInt(end);
-            const year = startYear + Math.floor(Math.random() * (endYear - startYear + 1));
-            const month = Math.floor(Math.random() * 12) + 1;
-            const day = Math.floor(Math.random() * 28) + 1;
-            return `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
-        }
+      <form id="reportForm">
+        <div class="form-group">
+          <label for="fechaOcurrencia">Fecha de Ocurrencia:</label>
+          <input type="date" id="fechaOcurrencia" name="fechaOcurrencia" required>
+        </div>
 
-        function generatePolygon(centerLat, centerLng, maxRadius) {
-            const sides = 6 + Math.floor(Math.random() * 4); // 6-9 lados
-            const coordinates = [];
-            
-            for (let i = 0; i < sides; i++) {
-                const angle = (i * 2 * Math.PI) / sides + (Math.random() - 0.5) * 0.5;
-                const radius = maxRadius * (0.5 + Math.random() * 0.5);
-                const lat = centerLat + radius * Math.cos(angle);
-                const lng = centerLng + radius * Math.sin(angle);
-                coordinates.push([lat, lng]);
-            }
-            
-            // Cerrar el polígono
-            coordinates.push(coordinates[0]);
-            return coordinates;
-        }
+        <div class="form-group">
+          <label for="institucion">Institución:</label>
+          <select id="institucion" name="institucion" required>
+            <option value="">Selecciona una institución</option>
+            <option value="UTPL">UTPL</option>
+            <option value="GAD">GAD</option>
+            <option value="Riesgos">Riesgos</option>
+            <option value="Gobierno provincial">Gobierno provincial</option>
+            <option value="Obras Públicas">Obras Públicas</option>
+          </select>
+        </div>
 
-        function generateLitologyData() {
-            const litologyTypes = [
-                { tipo: 'Arenisca', resistencia: 'Media', color: '#8e44ad' },
-                { tipo: 'Lutita', resistencia: 'Baja', color: '#9b59b6' },
-                { tipo: 'Conglomerado', resistencia: 'Alta', color: '#663399' },
-                { tipo: 'Caliza', resistencia: 'Alta', color: '#7d3c98' },
-                { tipo: 'Esquisto', resistencia: 'Media', color: '#8e44ad' }
-            ];
-            
-            const areas = [];
-            for (let i = 0; i < 8; i++) {
-                const centerLat = -4.0 + (Math.random() - 0.5) * 0.08;
-                const centerLng = -79.2 + (Math.random() - 0.5) * 0.08;
-                const litology = litologyTypes[Math.floor(Math.random() * litologyTypes.length)];
-                
-                areas.push({
-                    coordinates: generatePolygon(centerLat, centerLng, 0.004),
-                    tipo: litology.tipo,
-                    resistencia: litology.resistencia,
-                    color: litology.color
-                });
-            }
-            return areas;
-        }
-
-        function generateUrbanAreas() {
-            const urbanAreas = [
-                { nombre: 'Centro Zamora', poblacion: 15000 },
-                { nombre: 'Barrio Norte', poblacion: 8000 },
-                { nombre: 'Zona Industrial', poblacion: 3500 },
-                { nombre: 'Barrio Sur', poblacion: 6200 }
-            ];
-            
-            const areas = [];
-            for (let i = 0; i < urbanAreas.length; i++) {
-                const centerLat = -4.0 + (Math.random() - 0.5) * 0.06;
-                const centerLng = -79.2 + (Math.random() - 0.5) * 0.06;
-                
-                areas.push({
-                    coordinates: generatePolygon(centerLat, centerLng, 0.003),
-                    nombre: urbanAreas[i].nombre,
-                    poblacion: urbanAreas[i].poblacion
-                });
-            }
-            return areas;
-        }
-
-        function initMap() {
-            map = L.map('map').setView([-4.0, -79.2], 13);
-            
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap contributors'
-            }).addTo(map);
-
-            // Inicializar grupos de capas
-            Object.keys(datosCapas).forEach(layerName => {
-                layerGroups[layerName] = L.layerGroup();
-            });
-
-            // Eventos del mapa
-            map.on('click', function(e) {
-                addMarker(e.latlng.lat, e.latlng.lng);
-                analyzeLocation(e.latlng.lat, e.latlng.lng);
-            });
-
-            // Configurar controles de capas
-            setupLayerControls();
-        }
-
-        function setupLayerControls() {
-            document.querySelectorAll('.layer-toggle').forEach(toggle => {
-                const checkbox = toggle.querySelector('input[type="checkbox"]');
-                const layerName = toggle.dataset.layer;
-                
-                checkbox.addEventListener('change', function() {
-                    if (this.checked) {
-                        loadLayer(layerName);
-                        toggle.classList.add('active');
-                    } else {
-                        unloadLayer(layerName);
-                        toggle.classList.remove('active');
-                    }
-                });
-            });
-        }
-
-        function loadLayer(layerName) {
-            const data = datosCapas[layerName];
-            layerGroups[layerName].clearLayers();
-
-            data.forEach(item => {
-                let polygon;
-                let color = '#ff4444';
-                let fillOpacity = 0.4;
-                
-                switch(layerName) {
-                    case 'deslizamiento1999_2003':
-                        color = '#ff6b6b';
-                        fillOpacity = 0.5;
-                        break;
-                    case 'deslizamiento2003_2010':
-                        color = '#ffa500';
-                        fillOpacity = 0.5;
-                        break;
-                    case 'deslizamiento2010_2015':
-                        color = '#ff4444';
-                        fillOpacity = 0.5;
-                        break;
-                    case 'litologia':
-                        color = item.color || '#8e44ad';
-                        fillOpacity = 0.3;
-                        break;
-                    case 'urbano_dicf':
-                        color = '#3498db';
-                        fillOpacity = 0.4;
-                        break;
-                }
-
-                polygon = L.polygon(item.coordinates, {
-                    color: color,
-                    fillColor: color,
-                    fillOpacity: fillOpacity,
-                    weight: 2,
-                    opacity: 0.8
-                });
-
-                // Crear popup según el tipo de capa
-                let popupContent = '';
-                switch(layerName) {
-                    case 'deslizamiento1999_2003':
-                    case 'deslizamiento2003_2010':
-                    case 'deslizamiento2010_2015':
-                        popupContent = `
-                            <strong>Deslizamiento Histórico</strong><br>
-                            Período: ${item.periodo}<br>
-                            Fecha: ${item.fecha}<br>
-                            Tipo: ${item.tipo}<br>
-                            Magnitud: ${item.magnitud}<br>
-                            Área: ${calculatePolygonArea(item.coordinates).toFixed(2)} km²
-                        `;
-                        break;
-                    case 'litologia':
-                        popupContent = `
-                            <strong>Información Litológica</strong><br>
-                            Tipo de Roca: ${item.tipo}<br>
-                            Resistencia: ${item.resistencia}<br>
-                            Área: ${calculatePolygonArea(item.coordinates).toFixed(2)} km²
-                        `;
-                        break;
-                    case 'urbano_dicf':
-                        popupContent = `
-                            <strong>Área Urbana</strong><br>
-                            Nombre: ${item.nombre}<br>
-                            Población: ${item.poblacion.toLocaleString()}<br>
-                            Área: ${calculatePolygonArea(item.coordinates).toFixed(2)} km²
-                        `;
-                        break;
-                }
-
-                polygon.bindPopup(popupContent);
-                layerGroups[layerName].addLayer(polygon);
-            });
-
-            layerGroups[layerName].addTo(map);
-        }
-
-        function calculatePolygonArea(coordinates) {
-            // Cálculo aproximado del área en km²
-            let area = 0;
-            const n = coordinates.length - 1;
-            
-            for (let i = 0; i < n; i++) {
-                const lat1 = coordinates[i][0];
-                const lng1 = coordinates[i][1];
-                const lat2 = coordinates[i + 1][0];
-                const lng2 = coordinates[i + 1][1];
-                
-                area += (lng2 - lng1) * (lat2 + lat1);
-            }
-            
-            return Math.abs(area) * 111.32 * 111.32 / 2; // Conversión aproximada a km²
-        }
-
-        function unloadLayer(layerName) {
-            map.removeLayer(layerGroups[layerName]);
-        }
-
-        function addMarker(lat, lng) {
-            if (currentMarker) {
-                map.removeLayer(currentMarker);
-            }
-            
-            currentMarker = L.marker([lat, lng], {
-                icon: L.divIcon({
-                    className: 'custom-marker',
-                    html: '<div style="background: #e74c3c; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);"></div>',
-                    iconSize: [20, 20],
-                    iconAnchor: [10, 10]
-                })
-            }).addTo(map);
-        }
-
-        function analyzeLocation(lat, lng) {
-            showMessage(`Analizando ubicación: ${lat.toFixed(6)}, ${lng.toFixed(6)}`, 'success');
-        }
-
-        function showMessage(message, type) {
-            const statusDiv = document.getElementById('status-message');
-            statusDiv.textContent = message;
-            statusDiv.className = `status-message ${type} show`;
-            
-            setTimeout(() => {
-                statusDiv.classList.remove('show');
-            }, 4000);
-        }
-
-        // Inicializar cuando se carga la página
-        window.addEventListener('load', function() {
-            initMap();
-        });
-    </script>
-</body>
-</html>
+        <div class="form-group">
+          <label for="tipoMovimiento">Tipo de Deslizamiento:</label>
+          <select id="tipoMovimiento" name="tipoMovimiento" required>
+            <option value="">Selecciona un tipo</option>
+            <option value="Deslizamiento rotacional">🌀 Deslizamiento rotacional</option>
+            <option value="Deslizamiento traslacional">⤴️ Deslizamiento traslacional
