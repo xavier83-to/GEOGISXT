@@ -105,6 +105,35 @@
       transform: translateY(-2px);
       box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
     }
+
+    .status-indicator {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 12px 20px;
+      border-radius: 12px;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #27ae60;
+    }
+
+    .status-text {
+      font-size: 0.9em;
+      font-weight: 600;
+      color: #2c3e50;
+    }
     
     .container {
       display: flex;
@@ -417,30 +446,6 @@
       text-align: center;
     }
 
-    .connection-status {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      padding: 10px 15px;
-      border-radius: 8px;
-      font-size: 0.9em;
-      font-weight: 600;
-      z-index: 10001;
-      transition: all 0.3s ease;
-    }
-
-    .connection-status.online {
-      background: #d4edda;
-      color: #155724;
-      border: 1px solid #c3e6cb;
-    }
-
-    .connection-status.offline {
-      background: #f8d7da;
-      color: #721c24;
-      border: 1px solid #f5c6cb;
-    }
-
     /* Estilos para el modal del formulario */
     .modal-overlay {
       position: fixed;
@@ -709,15 +714,17 @@
       .btn-group {
         flex-direction: column;
       }
+
+      .status-indicator {
+        position: relative;
+        top: auto;
+        left: auto;
+        margin-bottom: 20px;
+      }
     }
   </style>
 </head>
 <body>
-  <!-- Indicador de conexión -->
-  <div id="connectionStatus" class="connection-status offline">
-    🔴 Desconectado de Supabase
-  </div>
-
   <div class="header">
     <div class="header-content">
       <div class="logo-section">
@@ -740,16 +747,21 @@
   
   <div class="container">
     <div class="sidebar">
+      <div class="status-indicator">
+        <div class="status-dot" id="statusDot"></div>
+        <span class="status-text" id="statusText">Mapa de Loja - Online</span>
+      </div>
+
       <h2>🗺️ Capas Temáticas</h2>
       
       <div class="stats-grid">
         <div class="stat-card">
-          <span class="stat-number">5</span>
+          <span class="stat-number">6</span>
           <div class="stat-label">Capas Disponibles</div>
         </div>
         <div class="stat-card">
-          <span class="stat-number" id="reportCount">0</span>
-          <div class="stat-label">Reportes Totales</div>
+          <span class="stat-number">3</span>
+          <div class="stat-label">Períodos Análisis</div>
         </div>
       </div>
       
@@ -785,6 +797,19 @@
       </div>
       
       <div class="section">
+        <h3>🏘️ Información Territorial</h3>
+        
+        <div class="layer-item" data-table="barrios_loja">
+          <input type="checkbox" class="layer-checkbox" data-layer="barrios_loja">
+          <div class="layer-content">
+            <h4>Barrios de Loja</h4>
+            <p>División territorial urbana de los barrios de la ciudad de Loja</p>
+            <span class="geometry-type">MULTIPOLYGON</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="section">
         <h3>🌍 Información Geológica</h3>
         
         <div class="layer-item" data-table="litologia">
@@ -805,19 +830,6 @@
           </div>
         </div>
       </div>
-
-      <div class="section">
-        <h3>📊 Reportes de Campo</h3>
-        
-        <div class="layer-item" data-table="reportes_eventos">
-          <input type="checkbox" class="layer-checkbox" data-layer="reportes_eventos">
-          <div class="layer-content">
-            <h4>Eventos Reportados</h4>
-            <p>Reportes de deslizamientos y eventos geológicos por instituciones</p>
-            <span class="geometry-type">POINT</span>
-          </div>
-        </div>
-      </div>
       
       <div class="info-panel">
         <h3>📊 Propósito de la Plataforma</h3>
@@ -827,7 +839,8 @@
       <div class="footer-info">
         <strong>Universidad Técnica Particular de Loja (UTPL)</strong><br>
         En cooperación con Gobiernos Autónomos Descentralizados (GAD)<br>
-        Gestión del Riesgo y Planificación Territorial
+        Gestión del Riesgo y Planificación Territorial<br>
+        <small>🌐 Desplegado en GitHub Pages</small>
       </div>
       
       <div class="error" id="error"></div>
@@ -876,18 +889,6 @@
         <div class="form-group">
           <label for="institucion">Institución:</label>
           <select id="institucion" name="institucion" required>
-            <option value="">Selecciona una institución</option>
-            <option value="UTPL">UTPL</option>
-            <option value="GAD">GAD</option>
-            <option value="Riesgos">Riesgos</option>
-            <option value="Gobierno provincial">Gobierno provincial</option>
-            <option value="Obras Publicas">Obras Públicas</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label for="tipoMovimiento">Tipo de Deslizamiento:</label>
-          <select id="tipoMovimiento" name="tipoMovimiento" required>
             <option value="">Selecciona un tipo</option>
             <option value="Deslizamiento rotacional">🌀 Deslizamiento rotacional</option>
             <option value="Deslizamiento traslacional">⤴️ Deslizamiento traslacional</option>
@@ -927,12 +928,12 @@
             <div>
               <label for="latitud">Latitud:</label>
               <input type="number" id="latitud" name="latitud" step="0.000001" 
-                     placeholder="-4.123456" required>
+                     placeholder="-3.994567" required>
             </div>
             <div>
               <label for="longitud">Longitud:</label>
               <input type="number" id="longitud" name="longitud" step="0.000001" 
-                     placeholder="-78.123456" required>
+                     placeholder="-79.204567" required>
             </div>
           </div>
           <button type="button" class="location-btn" onclick="obtenerUbicacion()">
@@ -960,29 +961,51 @@
     const SUPABASE_URL = 'https://lhhaxlwnpqzqavwtlemk.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxoaGF4bHducHF6cWF2d3RsZW1rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAxMjAwNzYsImV4cCI6MjA2NTY5NjA3Nn0.TofQW1f-n1Zah-w5OlLDWHYzTiORLUA2285rfd5GjQs';
     
-    // Sistema de notificaciones Telegram corregido
+    // Sistema de notificaciones Telegram
     const BOT_TOKEN = "8007213369:AAFdzQF80BuXObO_KCy6dBFERyJe2BgRdJ0";
     const RESPONSABLES = {
-      "UTPL": ["8015271148", "1789349442"],
-      "GAD": ["8015271148", "5484885518"],
-      "Riesgos": ["8015271148", "988479638"],
-      "Gobierno provincial": ["8015271148", "5820292882"],
-      "Obras Publicas": ["8015271148", "5820292882"]
+      "Deslizamiento rotacional": ["8015271148", "1789349442"],
+      "Deslizamiento traslacional": ["8015271148", "5484885518"],
+      "Flujo": ["8015271148", "988479638"],
+      "Reptación": ["8015271148", "5820292882"],
+      "Caída de roca": ["8015271148", "1789349442"]
     };
-    
+
     // Variables globales
     let map;
     let loadedLayers = {};
-    let connectionStatus = false;
+    let dbConnectionStatus = false;
     
     // Colores para cada capa
     const layerColors = {
       'deslizamiento1999_2003': '#e74c3c',
       'deslizamiento2003_2010': '#f39c12',
       'deslizamiento2010_2015': '#e67e22',
+      'barrios_loja': '#3498db',
       'litologia': '#27ae60',
-      'urbano_dicf': '#3498db',
-      'reportes_eventos': '#9b59b6'
+      'urbano_dicf': '#9b59b6'
+    };
+
+    // Colores específicos para barrios de Loja
+    const barriosColors = {
+      'San Juan de Salinas': '#FF6B6B',
+      'Sauces Norte': '#4ECDC4',
+      'Amable María': '#45B7D1',
+      'La Paz': '#96CEB4',
+      'Orillas del Zamora': '#FFEAA7',
+      'Central': '#DDA0DD',
+      'Pucará': '#98D8C8',
+      '24 de Mayo': '#F7DC6F',
+      'San Sebastián': '#BB8FCE',
+      'El Valle': '#85C1E9',
+      'Gran Colombia': '#F8C471',
+      'Ramon Pinto': '#82E0AA',
+      'Perpetuo Socorro': '#F1948A',
+      '18 de Noviembre': '#7FB3D3',
+      'San Isidro': '#D5DBDB',
+      'Isidro Ayora': '#AED6F1',
+      'Miraflores': '#A3E4D7',
+      'Nueva Granada': '#E8DAEF'
     };
     
     // Colores específicos para formaciones litológicas
@@ -1017,45 +1040,56 @@
         color: '#e67e22',
         type: 'deslizamientos'
       },
+      'barrios_loja': {
+        name: 'Barrios de Loja',
+        color: null,
+        type: 'territorial'
+      },
       'urbano_dicf': {
         name: 'Infraestructura Urbana',
-        color: '#3498db',
+        color: '#9b59b6',
         type: 'infraestructura'
       },
       'litologia': {
         name: 'Litología',
         color: null,
         type: 'litologia'
-      },
-      'reportes_eventos': {
-        name: 'Reportes de Eventos',
-        color: '#9b59b6',
-        type: 'reportes'
       }
     };
 
-    // Inicialización
-    document.addEventListener('DOMContentLoaded', function() {
-      initializeMap();
-      checkSupabaseConnection();
-      loadReportCount();
-      
-      // Verificar conexión cada 30 segundos
-      setInterval(checkSupabaseConnection, 30000);
-    });
-
-    // Inicializar el mapa
+    // Inicializar el mapa - FUNCIÓN SIMPLE
     function initializeMap() {
-      map = L.map('map').setView([-4.0, -78.5], 10);
+      // Crear el mapa directamente
+      map = L.map('map').setView([-3.9939, -79.2042], 13);
       
       // Capa base
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors | UTPL - Gestión del Riesgo Geodinámico'
       }).addTo(map);
+      
+      // Marcador de Loja
+      const lojaMarker = L.marker([-3.9939, -79.2042]).addTo(map);
+      lojaMarker.bindPopup(`
+        <div style="text-align: center;">
+          <h4>🏛️ Ciudad de Loja</h4>
+          <p><strong>Universidad Técnica Particular de Loja</strong></p>
+          <p>Centro de Monitoreo de Riesgos Geodinámicos</p>
+        </div>
+      `);
+
+      // Control de escala
+      L.control.scale().addTo(map);
+      
+      // Configurar límites del mapa
+      const lojaBounds = [
+        [-4.2, -79.4], // suroeste
+        [-3.7, -78.8]  // noreste
+      ];
+      map.setMaxBounds(lojaBounds);
     }
 
-    // Verificar conexión con Supabase
-    async function checkSupabaseConnection() {
+    // Función para verificar conexión a Supabase
+    async function checkDatabaseConnection() {
       try {
         const response = await fetch(`${SUPABASE_URL}/rest/v1/`, {
           method: 'HEAD',
@@ -1065,56 +1099,24 @@
           }
         });
         
-        updateConnectionStatus(response.ok);
-      } catch (error) {
-        updateConnectionStatus(false);
-      }
-    }
-
-    // Actualizar estado de conexión
-    function updateConnectionStatus(isConnected) {
-      const statusElement = document.getElementById('connectionStatus');
-      connectionStatus = isConnected;
-      
-      if (isConnected) {
-        statusElement.textContent = '🟢 Conectado a Supabase';
-        statusElement.className = 'connection-status online';
-      } else {
-        statusElement.textContent = '🔴 Desconectado de Supabase';
-        statusElement.className = 'connection-status offline';
-      }
-    }
-
-    // Cargar contador de reportes
-    async function loadReportCount() {
-      try {
-        const response = await fetch(`${SUPABASE_URL}/rest/v1/reportes_eventos?select=count`, {
-          headers: {
-            'apikey': SUPABASE_KEY,
-            'Authorization': `Bearer ${SUPABASE_KEY}`,
-            'Content-Type': 'application/json',
-            'Prefer': 'count=exact'
-          }
-        });
-        
         if (response.ok) {
-          const countHeader = response.headers.get('Content-Range');
-          if (countHeader) {
-            const count = countHeader.split('/')[1];
-            document.getElementById('reportCount').textContent = count;
-          }
+          dbConnectionStatus = true;
+          return true;
+        } else {
+          throw new Error('Error de autenticación');
         }
       } catch (error) {
-        console.error('Error al cargar contador de reportes:', error);
+        dbConnectionStatus = false;
+        console.warn('Sin conexión a Supabase:', error.message);
+        return false;
       }
     }
 
-    // Función para actualizar la leyenda dinámicamente
+    // Función para actualizar la leyenda
     function updateLegend() {
       const legend = document.getElementById('legend');
       const legendContent = document.getElementById('legend-content');
       
-      // Obtener capas activas
       const activeLayers = Object.keys(loadedLayers);
       
       if (activeLayers.length === 0) {
@@ -1127,19 +1129,19 @@
       
       // Agrupar por tipo
       const deslizamientos = activeLayers.filter(layer => layerInfo[layer]?.type === 'deslizamientos');
+      const territorial = activeLayers.filter(layer => layerInfo[layer]?.type === 'territorial');
       const infraestructura = activeLayers.filter(layer => layerInfo[layer]?.type === 'infraestructura');
       const litologia = activeLayers.filter(layer => layerInfo[layer]?.type === 'litologia');
-      const reportes = activeLayers.filter(layer => layerInfo[layer]?.type === 'reportes');
       
-      // Sección de deslizamientos
+      // Crear secciones de leyenda
       if (deslizamientos.length > 0) {
-        const deslizamientosSection = document.createElement('div');
-        deslizamientosSection.className = 'legend-section';
-        deslizamientosSection.innerHTML = '<h4>📈 Fenómenos de Remoción en Masa</h4>';
+        const section = document.createElement('div');
+        section.className = 'legend-section';
+        section.innerHTML = '<h4>📈 Fenómenos de Remoción en Masa</h4>';
         
         deslizamientos.forEach(layerId => {
           const info = layerInfo[layerId];
-          deslizamientosSection.innerHTML += `
+          section.innerHTML += `
             <div class="legend-item">
               <div class="legend-color" style="background-color: ${info.color};"></div>
               <span>${info.name}</span>
@@ -1147,37 +1149,49 @@
           `;
         });
         
-        legendContent.appendChild(deslizamientosSection);
+        legendContent.appendChild(section);
       }
-      
-      // Sección de reportes
-      if (reportes.length > 0) {
-        const reportesSection = document.createElement('div');
-        reportesSection.className = 'legend-section';
-        reportesSection.innerHTML = '<h4>📊 Reportes de Campo</h4>';
+
+      if (territorial.length > 0) {
+        const section = document.createElement('div');
+        section.className = 'legend-section';
+        section.innerHTML = '<h4>🏘️ División Territorial</h4>';
         
-        reportes.forEach(layerId => {
-          const info = layerInfo[layerId];
-          reportesSection.innerHTML += `
-            <div class="legend-item">
-              <div class="legend-color" style="background-color: ${info.color}; border-radius: 50%;"></div>
-              <span>${info.name}</span>
-            </div>
-          `;
-        });
+        const barriosLayer = loadedLayers['barrios_loja'];
+        if (barriosLayer) {
+          const uniqueBarrios = new Set();
+          barriosLayer.eachLayer(function(layer) {
+            if (layer.feature && layer.feature.properties) {
+              const props = layer.feature.properties;
+              const barrioName = props.barrio || props.nombre || props.name || props.BARRIO || props.NOMBRE;
+              if (barrioName) {
+                uniqueBarrios.add(barrioName);
+              }
+            }
+          });
+          
+          Array.from(uniqueBarrios).sort().forEach(barrioName => {
+            const color = barriosColors[barrioName] || '#3498db';
+            section.innerHTML += `
+              <div class="legend-item">
+                <div class="legend-color" style="background-color: ${color};"></div>
+                <span>${barrioName}</span>
+              </div>
+            `;
+          });
+        }
         
-        legendContent.appendChild(reportesSection);
+        legendContent.appendChild(section);
       }
-      
-      // Sección de infraestructura
+
       if (infraestructura.length > 0) {
-        const infraSection = document.createElement('div');
-        infraSection.className = 'legend-section';
-        infraSection.innerHTML = '<h4>🏗️ Infraestructura</h4>';
+        const section = document.createElement('div');
+        section.className = 'legend-section';
+        section.innerHTML = '<h4>🏗️ Infraestructura</h4>';
         
         infraestructura.forEach(layerId => {
           const info = layerInfo[layerId];
-          infraSection.innerHTML += `
+          section.innerHTML += `
             <div class="legend-item">
               <div class="legend-color" style="background-color: ${info.color};"></div>
               <span>${info.name}</span>
@@ -1185,16 +1199,14 @@
           `;
         });
         
-        legendContent.appendChild(infraSection);
+        legendContent.appendChild(section);
       }
-      
-      // Sección de litología (solo si está activa)
+
       if (litologia.length > 0) {
-        const litoSection = document.createElement('div');
-        litoSection.className = 'legend-section';
-        litoSection.innerHTML = '<h4>🗿 Formaciones Litológicas</h4>';
+        const section = document.createElement('div');
+        section.className = 'legend-section';
+        section.innerHTML = '<h4>🗿 Formaciones Litológicas</h4>';
         
-        // Obtener tipos únicos de litología de los datos cargados
         const litologiaLayer = loadedLayers['litologia'];
         if (litologiaLayer) {
           const uniqueLithologies = new Set();
@@ -1206,7 +1218,7 @@
           
           Array.from(uniqueLithologies).sort().forEach(litologyType => {
             const color = lithologyColors[litologyType] || '#27ae60';
-            litoSection.innerHTML += `
+            section.innerHTML += `
               <div class="legend-item">
                 <div class="legend-color" style="background-color: ${color};"></div>
                 <span>${litologyType}</span>
@@ -1215,12 +1227,16 @@
           });
         }
         
-        legendContent.appendChild(litoSection);
+        legendContent.appendChild(section);
       }
     }
     
     // Funciones del modal
     function openReportModal() {
+      if (!dbConnectionStatus) {
+        showError('No hay conexión a la base de datos. Verifica tu conexión a internet.');
+        return;
+      }
       document.getElementById('reportModal').classList.add('show');
       document.getElementById('fechaOcurrencia').valueAsDate = new Date();
     }
@@ -1229,21 +1245,7 @@
       document.getElementById('reportModal').classList.remove('show');
     }
     
-    // Cerrar modal al hacer click fuera
-    document.getElementById('reportModal').addEventListener('click', function(e) {
-      if (e.target === this) {
-        closeReportModal();
-      }
-    });
-    
-    // Cerrar modal con ESC
-    document.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape') {
-        closeReportModal();
-      }
-    });
-    
-    // Función para mostrar/ocultar loading del mapa
+    // Función para mostrar/ocultar loading
     function showLoading(show) {
       const loading = document.getElementById('loading');
       if (show) {
@@ -1253,7 +1255,7 @@
       }
     }
     
-    // Función para mostrar errores del mapa
+    // Función para mostrar errores
     function showError(message) {
       const error = document.getElementById('error');
       error.textContent = message;
@@ -1264,8 +1266,8 @@
     }
     
     // Función para enviar notificación por Telegram
-    async function enviarNotificacionTelegram(institucion, datosReporte) {
-      const chatIds = RESPONSABLES[institucion] || RESPONSABLES["UTPL"];
+    async function enviarNotificacionTelegram(tipoDeslizamiento, datosReporte) {
+      const chatIds = RESPONSABLES[tipoDeslizamiento] || RESPONSABLES["Deslizamiento rotacional"];
       
       const tipoEmoji = {
         "Deslizamiento rotacional": "🌀",
@@ -1275,29 +1277,18 @@
         "Caída de roca": "🪨"
       };
 
-      const estadoEmoji = {
-        "Activo": "🔴",
-        "Suspendido": "⏸️",
-        "Reactivado": "🔄",
-        "Latente": "🟡",
-        "Estabilizado": "🟢",
-        "Relicto": "⚫"
-      };
-
       const mensaje = `
-🚨 *NUEVO REPORTE DE EVENTO GEOLÓGICO*
+🚨 *NUEVO REPORTE DE DESLIZAMIENTO*
 
-${tipoEmoji[datosReporte.tipo_movimiento]} *Tipo:* ${datosReporte.tipo_movimiento}
-${estadoEmoji[datosReporte.estado]} *Estado:* ${datosReporte.estado}
-📅 *Fecha Ocurrencia:* ${datosReporte.fecha_ocurrencia}
+${tipoEmoji[tipoDeslizamiento]} *Tipo:* ${tipoDeslizamiento}
+📅 *Fecha:* ${datosReporte.fecha_ocurrencia}
 🏢 *Institución:* ${datosReporte.institucion}
-📝 *Descripción:* ${datosReporte.descripcion_danos || 'No especificada'}
-📍 *Coordenadas:* ${datosReporte.latitud}, ${datosReporte.longitud}
-🗓️ *Fecha Atención:* ${datosReporte.fecha_atencion || 'Pendiente'}
+📊 *Estado:* ${datosReporte.estado}
+📝 *Descripción:* ${datosReporte.descripcion_danos}
+📍 *Ubicación:* ${datosReporte.latitud}, ${datosReporte.longitud}
+🗓️ *Fecha de Atención:* ${datosReporte.fecha_atencion || 'No especificada'}
 
 🔗 *Ver en Google Maps:* https://maps.google.com/maps?q=${datosReporte.latitud},${datosReporte.longitud}
-
-*Plataforma UTPL - Gestión del Riesgo*
       `.trim();
 
       const notificacionesEnviadas = [];
@@ -1318,8 +1309,6 @@ ${estadoEmoji[datosReporte.estado]} *Estado:* ${datosReporte.estado}
 
           if (response.ok) {
             notificacionesEnviadas.push(chatId);
-          } else {
-            console.error(`Error enviando notificación a ${chatId}:`, await response.text());
           }
         } catch (error) {
           console.error(`Error enviando notificación a ${chatId}:`, error);
@@ -1331,6 +1320,11 @@ ${estadoEmoji[datosReporte.estado]} *Estado:* ${datosReporte.estado}
     
     // Función para cargar datos de Supabase
     async function loadLayerData(tableName) {
+      if (!dbConnectionStatus) {
+        showError('No hay conexión a la base de datos.');
+        return false;
+      }
+
       try {
         showLoading(true);
         
@@ -1343,7 +1337,7 @@ ${estadoEmoji[datosReporte.estado]} *Estado:* ${datosReporte.estado}
         });
         
         if (!response.ok) {
-          throw new Error(`Error HTTP ${response.status}: ${response.statusText}`);
+          throw new Error(`Error al cargar datos de ${tableName}: ${response.statusText}`);
         }
         
         const data = await response.json();
@@ -1352,115 +1346,64 @@ ${estadoEmoji[datosReporte.estado]} *Estado:* ${datosReporte.estado}
           throw new Error(`No se encontraron datos en la tabla ${tableName}`);
         }
         
-        let geoJsonLayer;
-        
-        // Tratamiento especial para reportes_eventos (puntos)
-        if (tableName === 'reportes_eventos') {
-          geoJsonLayer = L.geoJSON(null, {
-            pointToLayer: function(feature, latlng) {
-              return L.circleMarker(latlng, {
-                radius: 8,
-                fillColor: layerColors[tableName],
-                color: '#fff',
-                weight: 2,
-                opacity: 1,
-                fillOpacity: 0.8
-              });
-            },
-            onEachFeature: function(feature, layer) {
-              const props = feature.properties;
-              let popupContent = `
-                <div style="max-width: 300px;">
-                  <h4 style="margin-bottom: 10px; color: #2c3e50; border-bottom: 2px solid #9b59b6; padding-bottom: 5px;">
-                    📊 Reporte de Evento
-                  </h4>
-                  <p><strong>🏢 Institución:</strong> ${props.institucion}</p>
-                  <p><strong>📅 Fecha:</strong> ${props.fecha_ocurrencia}</p>
-                  <p><strong>🌀 Tipo:</strong> ${props.tipo_movimiento}</p>
-                  <p><strong>📊 Estado:</strong> ${props.estado}</p>
-                  ${props.descripcion_danos ? `<p><strong>📝 Descripción:</strong> ${props.descripcion_danos}</p>` : ''}
-                  ${props.fecha_atencion ? `<p><strong>🗓️ Atención:</strong> ${props.fecha_atencion}</p>` : ''}
-                  <p><strong>📍 Coordenadas:</strong> ${props.latitud}, ${props.longitud}</p>
-                </div>
-              `;
-              layer.bindPopup(popupContent);
-            }
-          });
-          
-          // Convertir datos a GeoJSON para reportes
-          data.forEach(record => {
-            if (record.latitud && record.longitud) {
-              const geojsonFeature = {
-                type: 'Feature',
-                geometry: {
-                  type: 'Point',
-                  coordinates: [record.longitud, record.latitud]
-                },
-                properties: { ...record }
-              };
-              geoJsonLayer.addData(geojsonFeature);
-            }
-          });
-        } else {
-          // Tratamiento para capas con geometría PostGIS
-          geoJsonLayer = L.geoJSON(null, {
-            style: function(feature) {
-              let color = layerColors[tableName] || '#3498db';
-              
-              if (tableName === 'litologia' && feature.properties.litologia) {
-                color = lithologyColors[feature.properties.litologia] || '#27ae60';
+        const geoJsonLayer = L.geoJSON(null, {
+          style: function(feature) {
+            let color = layerColors[tableName] || '#3498db';
+            
+            // Colores específicos para barrios
+            if (tableName === 'barrios_loja' && feature.properties) {
+              const barrioName = feature.properties.barrio || feature.properties.nombre || 
+                               feature.properties.name || feature.properties.BARRIO || 
+                               feature.properties.NOMBRE;
+              if (barrioName && barriosColors[barrioName]) {
+                color = barriosColors[barrioName];
               }
-              
-              return {
-                color: color,
-                weight: tableName === 'urbano_dicf' ? 3 : 2,
-                opacity: 0.8,
-                fillOpacity: 0.6,
-                fillColor: color
-              };
-            },
-            onEachFeature: function(feature, layer) {
-              let popupContent = `<div style="max-width: 300px;">`;
-              popupContent += `<h4 style="margin-bottom: 10px; color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 5px;">Información Geoespacial</h4>`;
-              popupContent += `<p><strong>Capa:</strong> ${tableName}</p>`;
-              
-              Object.keys(feature.properties).forEach(key => {
-                if (key !== 'geom' && feature.properties[key] !== null && feature.properties[key] !== undefined) {
-                  popupContent += `<p><strong>${key}:</strong> ${feature.properties[key]}</p>`;
-                }
-              });
-              
-              popupContent += `</div>`;
-              layer.bindPopup(popupContent);
             }
-          });
-          
-          // Procesar geometrías PostGIS
-          data.forEach(record => {
-            if (record.geom) {
-              const geojsonFeature = {
-                type: 'Feature',
-                geometry: record.geom,
-                properties: { ...record }
-              };
-              
-              delete geojsonFeature.properties.geom;
-              geoJsonLayer.addData(geojsonFeature);
+            
+            // Colores específicos para litología
+            if (tableName === 'litologia' && feature.properties.litologia) {
+              color = lithologyColors[feature.properties.litologia] || '#27ae60';
             }
-          });
-        }
+            
+            return {
+              color: color,
+              weight: 2,
+              opacity: 0.8,
+              fillOpacity: 0.6,
+              fillColor: color
+            };
+          },
+          onEachFeature: function(feature, layer) {
+            let popupContent = `<div style="max-width: 300px;">`;
+            popupContent += `<h4 style="margin-bottom: 10px; color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 5px;">Información Geoespacial</h4>`;
+            popupContent += `<p><strong>Capa:</strong> ${tableName}</p>`;
+            
+            Object.keys(feature.properties).forEach(key => {
+              if (key !== 'geom') {
+                popupContent += `<p><strong>${key}:</strong> ${feature.properties[key]}</p>`;
+              }
+            });
+            
+            popupContent += `</div>`;
+            layer.bindPopup(popupContent);
+          }
+        });
+        
+        data.forEach(record => {
+          if (record.geom) {
+            const geojsonFeature = {
+              type: 'Feature',
+              geometry: record.geom,
+              properties: { ...record }
+            };
+            
+            delete geojsonFeature.properties.geom;
+            geoJsonLayer.addData(geojsonFeature);
+          }
+        });
         
         loadedLayers[tableName] = geoJsonLayer;
         geoJsonLayer.addTo(map);
-        
-        // Ajustar vista del mapa al primer layer cargado
-        if (Object.keys(loadedLayers).length === 1 && geoJsonLayer.getLayers().length > 0) {
-          try {
-            map.fitBounds(geoJsonLayer.getBounds(), { padding: [20, 20] });
-          } catch (error) {
-            console.warn('No se pudo ajustar la vista del mapa:', error);
-          }
-        }
         
         updateLegend();
         showLoading(false);
@@ -1469,7 +1412,6 @@ ${estadoEmoji[datosReporte.estado]} *Estado:* ${datosReporte.estado}
       } catch (error) {
         showLoading(false);
         showError(`Error al cargar ${tableName}: ${error.message}`);
-        console.error('Error completo:', error);
         return false;
       }
     }
@@ -1483,27 +1425,7 @@ ${estadoEmoji[datosReporte.estado]} *Estado:* ${datosReporte.estado}
             document.getElementById('longitud').value = position.coords.longitude.toFixed(6);
           },
           function(error) {
-            let mensaje = 'Error al obtener la ubicación: ';
-            switch(error.code) {
-              case error.PERMISSION_DENIED:
-                mensaje += 'Permiso denegado por el usuario.';
-                break;
-              case error.POSITION_UNAVAILABLE:
-                mensaje += 'Información de ubicación no disponible.';
-                break;
-              case error.TIMEOUT:
-                mensaje += 'Tiempo de espera agotado.';
-                break;
-              default:
-                mensaje += 'Error desconocido.';
-                break;
-            }
-            alert(mensaje);
-          },
-          {
-            enableHighAccuracy: true,
-            timeout: 10000,
-            maximumAge: 60000
+            alert('Error al obtener la ubicación: ' + error.message);
           }
         );
       } else {
@@ -1517,136 +1439,170 @@ ${estadoEmoji[datosReporte.estado]} *Estado:* ${datosReporte.estado}
       document.getElementById('errorAlert').style.display = 'none';
       document.getElementById('fechaOcurrencia').valueAsDate = new Date();
     }
-    
-    // Event listener para checkboxes
-    document.addEventListener('click', function(e) {
-      if (e.target && e.target.classList.contains('layer-checkbox')) {
-        const checkbox = e.target;
-        const tableName = checkbox.getAttribute('data-layer');
-        const layerItem = checkbox.closest('.layer-item');
+
+    // INICIALIZACIÓN SIMPLE PERO MANTENIENDO SUPABASE
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('🌍 Iniciando Geoportal UTPL - Loja');
+      
+      // Esperar un poco para que Leaflet esté completamente cargado
+      setTimeout(() => {
+        // Inicializar mapa inmediatamente
+        initializeMap();
+        console.log('✅ Mapa inicializado');
         
-        if (checkbox.checked) {
-          // Activar capa
-          layerItem.classList.add('active');
-          
-          if (loadedLayers[tableName]) {
-            loadedLayers[tableName].addTo(map);
-            updateLegend();
+        // Verificar conexión a BD y actualizar estado
+        checkDatabaseConnection().then(connected => {
+          if (connected) {
+            console.log('✅ BD conectada');
+            dbConnectionStatus = true;
+            document.getElementById('statusText').textContent = 'BD Conectada - Loja Online';
+            document.getElementById('statusDot').style.background = '#27ae60';
           } else {
-            loadLayerData(tableName).then(success => {
-              if (!success) {
-                checkbox.checked = false;
-                layerItem.classList.remove('active');
-              }
-            });
+            console.log('⚠️ Sin conexión BD');
+            document.getElementById('statusText').textContent = 'Sin conexión a BD';
+            document.getElementById('statusDot').style.background = '#e74c3c';
+            showError('Modo offline: Las capas de datos no estarán disponibles sin conexión a internet');
           }
-        } else {
-          // Desactivar capa
-          layerItem.classList.remove('active');
-          
-          if (loadedLayers[tableName]) {
-            map.removeLayer(loadedLayers[tableName]);
-          }
-          updateLegend();
-        }
-      }
-    });
-    
-    // Manejar envío del formulario
-    document.getElementById('reportForm').addEventListener('submit', async function(e) {
-      e.preventDefault();
-      
-      if (!connectionStatus) {
-        document.getElementById('errorAlert').textContent = 'No hay conexión con Supabase. Verifica tu conexión a internet.';
-        document.getElementById('errorAlert').style.display = 'block';
-        return;
-      }
-      
-      const loading = document.getElementById('formLoading');
-      const successAlert = document.getElementById('successAlert');
-      const errorAlert = document.getElementById('errorAlert');
-      
-      successAlert.style.display = 'none';
-      errorAlert.style.display = 'none';
-      loading.style.display = 'block';
-
-      const formData = new FormData(this);
-      const data = {
-        fecha_ocurrencia: formData.get('fechaOcurrencia'),
-        institucion: formData.get('institucion'),
-        tipo_movimiento: formData.get('tipoMovimiento'),
-        estado: formData.get('estado'),
-        descripcion_danos: formData.get('descripcionDanos') || null,
-        fecha_atencion: formData.get('fechaAtencion') || null,
-        latitud: parseFloat(formData.get('latitud')),
-        longitud: parseFloat(formData.get('longitud')),
-        created_at: new Date().toISOString()
-      };
-
-      try {
-        // Validar coordenadas
-        if (isNaN(data.latitud) || isNaN(data.longitud)) {
-          throw new Error('Las coordenadas deben ser números válidos');
-        }
-
-        const response = await fetch(`${SUPABASE_URL}/rest/v1/reportes_eventos`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'apikey': SUPABASE_KEY,
-            'Authorization': `Bearer ${SUPABASE_KEY}`,
-            'Prefer': 'return=minimal'
-          },
-          body: JSON.stringify(data)
         });
-
-        if (response.ok) {
-          // Enviar notificaciones por Telegram
-          try {
-            const notificacionesEnviadas = await enviarNotificacionTelegram(data.institucion, data);
-            console.log(`Notificaciones enviadas a: ${notificacionesEnviadas.join(', ')}`);
-          } catch (telegramError) {
-            console.warn('Error enviando notificaciones Telegram:', telegramError);
-          }
+      }, 500); // Esperar 500ms para que Leaflet esté listo
+      
+      // Event listeners para checkboxes
+      document.addEventListener('click', function(e) {
+        if (e.target && e.target.classList.contains('layer-checkbox')) {
+          const checkbox = e.target;
+          const tableName = checkbox.getAttribute('data-layer');
+          const layerItem = checkbox.closest('.layer-item');
           
-          loading.style.display = 'none';
-          successAlert.style.display = 'block';
-          this.reset();
-          document.getElementById('fechaOcurrencia').valueAsDate = new Date();
-          
-          // Actualizar contador de reportes
-          loadReportCount();
-          
-          // Recargar capa de reportes si está activa
-          const reportesCheckbox = document.querySelector('input[data-layer="reportes_eventos"]');
-          if (reportesCheckbox && reportesCheckbox.checked) {
-            if (loadedLayers['reportes_eventos']) {
-              map.removeLayer(loadedLayers['reportes_eventos']);
-              delete loadedLayers['reportes_eventos'];
+          if (checkbox.checked) {
+            layerItem.classList.add('active');
+            
+            if (loadedLayers[tableName]) {
+              loadedLayers[tableName].addTo(map);
+              updateLegend();
+            } else {
+              loadLayerData(tableName).then(success => {
+                if (!success) {
+                  checkbox.checked = false;
+                  layerItem.classList.remove('active');
+                }
+              });
             }
-            loadLayerData('reportes_eventos');
+          } else {
+            layerItem.classList.remove('active');
+            
+            if (loadedLayers[tableName]) {
+              map.removeLayer(loadedLayers[tableName]);
+              delete loadedLayers[tableName];
+            }
+            updateLegend();
           }
-          
-          setTimeout(() => {
-            closeReportModal();
-          }, 3000);
-        } else {
-          const errorText = await response.text();
-          throw new Error(`Error ${response.status}: ${errorText}`);
         }
-      } catch (error) {
-        loading.style.display = 'none';
-        errorAlert.textContent = `Error: ${error.message}`;
-        errorAlert.style.display = 'block';
-        console.error('Error completo:', error);
-      }
-    });
+      });
 
-    // Hacer funciones globales para los botones
-    window.openReportModal = openReportModal;
-    window.closeReportModal = closeReportModal;
-    window.obtenerUbicacion = obtenerUbicacion;
-    window.limpiarFormulario = limpiarFormulario;
+      // Modal event listeners
+      document.getElementById('reportModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+          closeReportModal();
+        }
+      });
+      
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+          closeReportModal();
+        }
+      });
+      
+      // Form submit
+      document.getElementById('reportForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        if (!dbConnectionStatus) {
+          showError('No hay conexión a la base de datos.');
+          return;
+        }
+        
+        const loading = document.getElementById('formLoading');
+        const successAlert = document.getElementById('successAlert');
+        const errorAlert = document.getElementById('errorAlert');
+        
+        successAlert.style.display = 'none';
+        errorAlert.style.display = 'none';
+        loading.style.display = 'block';
+
+        const formData = new FormData(this);
+        const data = {
+          fecha_ocurrencia: formData.get('fechaOcurrencia'),
+          institucion: formData.get('institucion'),
+          tipo_movimiento: formData.get('tipoMovimiento'),
+          estado: formData.get('estado'),
+          descripcion_danos: formData.get('descripcionDanos'),
+          fecha_atencion: formData.get('fechaAtencion') || null,
+          latitud: parseFloat(formData.get('latitud')),
+          longitud: parseFloat(formData.get('longitud'))
+        };
+
+        try {
+          const response = await fetch(`${SUPABASE_URL}/rest/v1/reportes_eventos`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': SUPABASE_KEY,
+              'Authorization': `Bearer ${SUPABASE_KEY}`
+            },
+            body: JSON.stringify(data)
+          });
+
+          if (response.ok) {
+            const tipoDeslizamiento = formData.get('tipoMovimiento');
+            await enviarNotificacionTelegram(tipoDeslizamiento, data);
+            
+            loading.style.display = 'none';
+            successAlert.style.display = 'block';
+            this.reset();
+            
+            document.getElementById('fechaOcurrencia').valueAsDate = new Date();
+            
+            setTimeout(() => {
+              closeReportModal();
+            }, 3000);
+          } else {
+            throw new Error('Error en la respuesta del servidor');
+          }
+        } catch (error) {
+          loading.style.display = 'none';
+          errorAlert.style.display = 'block';
+          console.error('Error:', error);
+        }
+      });
+      
+        // Verificar conexión periódicamente para mantener estado actualizado
+        setInterval(async () => {
+          const connected = await checkDatabaseConnection();
+          if (connected && !dbConnectionStatus) {
+            dbConnectionStatus = true;
+            document.getElementById('statusText').textContent = 'BD Reconectada - Loja Online';
+            document.getElementById('statusDot').style.background = '#27ae60';
+          } else if (!connected && dbConnectionStatus) {
+            dbConnectionStatus = false;
+            document.getElementById('statusText').textContent = 'Conexión BD perdida';
+            document.getElementById('statusDot').style.background = '#e74c3c';
+          }
+        }, 30000); // Cada 30 segundos
+        
+        console.log('✅ Geoportal completamente cargado');
+      }, 500); // Esperar 500ms para que Leaflet esté listo
   </script>
 </body>
-</html>
+</html>a institución</option>
+            <option value="UTPL">UTPL</option>
+            <option value="GAD">GAD</option>
+            <option value="Riesgos">Riesgos</option>
+            <option value="Gobierno provincial">Gobierno provincial</option>
+            <option value="Obras Públicas">Obras Públicas</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="tipoMovimiento">Tipo de Deslizamiento:</label>
+          <select id="tipoMovimiento" name="tipoMovimiento" required>
+            <option value="">Selecciona un
